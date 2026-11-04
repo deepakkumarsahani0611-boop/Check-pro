@@ -16,10 +16,9 @@ export default function ContactUs() {
     }, 1500);
   };
 
-  const contactMethods = [
-    { icon: Mail, label: 'Email', value: 'support@jobcheck.pro', href: 'mailto:support@jobcheck.pro' },
-    { icon: Phone, label: 'Phone', value: '+91 80 4567 8900', href: '#' },
-    { icon: MapPin, label: 'Office', value: 'Bengaluru, Karnataka, India', href: '#' },
+    const contactMethods = [
+    { icon: Mail, label: 'Email', value: 'leaveroot782@gmail.com', href: 'mailto:leaveroot782@gmail.com' },
+    { icon: MapPin, label: 'Office', value: 'Vadodara, Gujarat, India', href: '#' },
     { icon: Clock, label: 'Hours', value: 'Mon-Fri, 9 AM - 6 PM IST', href: '#' },
   ];
 
