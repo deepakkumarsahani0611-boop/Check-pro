@@ -1,4 +1,4 @@
-// ===== Types =====
+// ===== UNIVERSAL VERIFICATION ENGINE - All World Jobs =====
 
 export interface RiskCheck {
   id: string;
@@ -97,193 +97,13 @@ export interface Testimonial {
   saved: string;
 }
 
-// ===== Mock Data =====
-
-export const verificationResults: Record<string, VerificationResult> = {
-  safe: {
-    riskScore: 12,
-    status: 'safe',
-    jobTitle: 'Senior Frontend Engineer',
-    company: 'Vercel Inc.',
-    location: 'Remote (Global)',
-    salary: '$140k - $180k',
-    postedDate: '2 days ago',
-    platform: 'LinkedIn',
-    checks: [
-      { id: 'domain', label: 'Domain Age', status: 'pass', detail: 'vercel.com registered 11 years ago', icon: 'Globe' },
-      { id: 'email', label: 'Official Email', status: 'pass', detail: 'Careers@vercel.com matches domain', icon: 'Mail' },
-      { id: 'salary', label: 'Salary Trap', status: 'pass', detail: 'Salary range matches industry standard', icon: 'DollarSign' },
-      { id: 'duplicate', label: 'Duplicate Check', status: 'pass', detail: 'No duplicate listings found', icon: 'Copy' },
-      { id: 'messaging', label: 'Telegram/WhatsApp Flag', status: 'pass', detail: 'No personal messaging apps requested', icon: 'MessageCircle' },
-    ],
-  },
-  caution: {
-    riskScore: 58,
-    status: 'caution',
-    jobTitle: 'Data Entry Specialist',
-    company: 'QuickHire Solutions',
-    location: 'Work from Home',
-    salary: '$45k - $60k',
-    postedDate: '5 hours ago',
-    platform: 'Naukri',
-    checks: [
-      { id: 'domain', label: 'Domain Age', status: 'warning', detail: 'Domain registered 4 months ago', icon: 'Globe' },
-      { id: 'email', label: 'Official Email', status: 'fail', detail: 'Uses Gmail address instead of company domain', icon: 'Mail' },
-      { id: 'salary', label: 'Salary Trap', status: 'warning', detail: 'Salary above market average for this role', icon: 'DollarSign' },
-      { id: 'duplicate', label: 'Duplicate Check', status: 'pass', detail: 'No duplicates found', icon: 'Copy' },
-      { id: 'messaging', label: 'Telegram/WhatsApp Flag', status: 'warning', detail: 'Requests WhatsApp contact in description', icon: 'MessageCircle' },
-    ],
-  },
-  danger: {
-    riskScore: 91,
-    status: 'danger',
-    jobTitle: 'Marketing Executive - Urgent Hiring',
-    company: 'Global Digital Corp',
-    location: 'Remote - High Pay',
-    salary: '$80k - $120k',
-    postedDate: '1 hour ago',
-    platform: 'Facebook Jobs',
-    checks: [
-      { id: 'domain', label: 'Domain Age', status: 'fail', detail: 'Domain registered 8 days ago', icon: 'Globe' },
-      { id: 'email', label: 'Official Email', status: 'fail', detail: 'No official email found — Gmail only', icon: 'Mail' },
-      { id: 'salary', label: 'Salary Trap', status: 'fail', detail: 'Salary 3x above market rate — classic bait', icon: 'DollarSign' },
-      { id: 'duplicate', label: 'Duplicate Check', status: 'fail', detail: 'Same posting found on 7 different boards', icon: 'Copy' },
-      { id: 'messaging', label: 'Telegram/WhatsApp Flag', status: 'fail', detail: 'Requires Telegram interview — major red flag', icon: 'MessageCircle' },
-    ],
-  },
-};
-
-export const companies: Record<string, CompanyInfo> = {
-  vercel: {
-    name: 'Vercel Inc.',
-    website: 'vercel.com',
-    domainAge: '11 years, 3 months',
-    domainAgeYears: 11,
-    gstNumber: 'Not applicable (US entity)',
-    legalStatus: 'Delaware C-Corporation — Active',
-    employeeCount: '500-1000',
-    trustBadge: 'Verified',
-    founded: '2015',
-    industry: 'Cloud Infrastructure / Developer Tools',
-    description: 'Vercel is the platform for frontend developers, providing the speed and reliability innovators need to create at the moment of inspiration.',
-  },
-  google: {
-    name: 'Google LLC',
-    website: 'google.com',
-    domainAge: '27 years, 6 months',
-    domainAgeYears: 27,
-    gstNumber: 'Not applicable (US entity)',
-    legalStatus: 'Delaware C-Corporation — Active',
-    employeeCount: '180,000+',
-    trustBadge: 'Verified',
-    founded: '1998',
-    industry: 'Technology / Search / Cloud',
-    description: 'Google LLC is a multinational technology company specializing in internet-related services and products.',
-  },
-  quickhire: {
-    name: 'QuickHire Solutions',
-    website: 'quickhiresolutions.com',
-    domainAge: '4 months, 12 days',
-    domainAgeYears: 0,
-    gstNumber: 'GSTIN not found',
-    legalStatus: 'Unregistered — No public records',
-    employeeCount: 'Unknown',
-    trustBadge: 'Unverified',
-    founded: '2024',
-    industry: 'Unknown',
-    description: 'No verifiable information found. Domain is recently registered with no public business records.',
-  },
-  Razorpay: {
-    name: 'Razorpay Software Pvt. Ltd.',
-    website: 'razorpay.com',
-    domainAge: '10 years, 1 month',
-    domainAgeYears: 10,
-    gstNumber: '29AALCR0552P1ZJ',
-    legalStatus: 'Private Limited — Active (CIN: U72200KA2014PTC073772)',
-    employeeCount: '2000-5000',
-    trustBadge: 'Verified',
-    founded: '2014',
-    industry: 'Fintech / Payment Processing',
-    description: 'Razorpay is a full-stack financial solutions company offering payment processing, banking, and lending products.',
-  },
-};
-
-export const jobHistoryData: Record<string, JobHistory> = {
-  safe: {
-    jobTitle: 'Senior Frontend Engineer',
-    company: 'Vercel Inc.',
-    repostCount: 0,
-    salaryChanges: 1,
-    locationChanges: 0,
-    firstPosted: '2024-10-15',
-    lastSeen: '2024-10-21',
-    events: [
-      { id: 'e1', date: '2024-10-15', type: 'posted', label: 'Job Posted', detail: 'Original listing on LinkedIn. Salary: $130k-$170k' },
-      { id: 'e2', date: '2024-10-18', type: 'salary_changed', label: 'Salary Updated', detail: 'Salary range adjusted to $140k-$180k (market correction)' },
-      { id: 'e3', date: '2024-10-21', type: 'edited', label: 'Description Updated', detail: 'Added remote work policy clarification' },
-    ],
-  },
-  caution: {
-    jobTitle: 'Data Entry Specialist',
-    company: 'QuickHire Solutions',
-    repostCount: 3,
-    salaryChanges: 2,
-    locationChanges: 1,
-    firstPosted: '2024-09-28',
-    lastSeen: '2024-10-21',
-    events: [
-      { id: 'e1', date: '2024-09-28', type: 'posted', label: 'Job Posted', detail: 'Original listing. Salary: $35k-$45k. Location: Bangalore' },
-      { id: 'e2', date: '2024-10-02', type: 'reposted', label: 'Reposted (1st)', detail: 'Listing deleted and re-posted on same board' },
-      { id: 'e3', date: '2024-10-05', type: 'salary_changed', label: 'Salary Increased', detail: 'Salary raised to $45k-$60k (unusual for data entry)' },
-      { id: 'e4', date: '2024-10-09', type: 'reposted', label: 'Reposted (2nd)', detail: 'Re-posted on 3 different job boards simultaneously' },
-      { id: 'e5', date: '2024-10-14', type: 'location_changed', label: 'Location Changed', detail: 'Changed from Bangalore to Work from Home' },
-      { id: 'e6', date: '2024-10-18', type: 'reposted', label: 'Reposted (3rd)', detail: 'Re-posted again with "Urgent Hiring" tag' },
-      { id: 'e7', date: '2024-10-21', type: 'edited', label: 'Description Modified', detail: 'Added WhatsApp contact requirement' },
-    ],
-  },
-  danger: {
-    jobTitle: 'Marketing Executive - Urgent Hiring',
-    company: 'Global Digital Corp',
-    repostCount: 7,
-    salaryChanges: 4,
-    locationChanges: 3,
-    firstPosted: '2024-10-01',
-    lastSeen: '2024-10-23',
-    events: [
-      { id: 'e1', date: '2024-10-01', type: 'posted', label: 'Job Posted', detail: 'Original listing on Facebook Jobs. Salary: $50k-$70k' },
-      { id: 'e2', date: '2024-10-03', type: 'reposted', label: 'Reposted (1st)', detail: 'Re-posted with different company name' },
-      { id: 'e3', date: '2024-10-05', type: 'salary_changed', label: 'Salary Increased', detail: 'Salary jumped to $80k-$120k — 2x original' },
-      { id: 'e4', date: '2024-10-07', type: 'reposted', label: 'Reposted (2nd)', detail: 'Posted on 5 boards at once with different titles' },
-      { id: 'e5', date: '2024-10-10', type: 'location_changed', label: 'Location Changed', detail: 'Changed city 3 times in one week' },
-      { id: 'e6', date: '2024-10-13', type: 'reposted', label: 'Reposted (3rd)', detail: 'Re-posted with "Immediate Joining" urgency' },
-      { id: 'e7', date: '2024-10-16', type: 'salary_changed', label: 'Salary Changed Again', detail: 'Salary changed for the 4th time — $90k-$150k' },
-      { id: 'e8', date: '2024-10-19', type: 'reposted', label: 'Reposted (7th)', detail: 'Found on 7 different platforms with 7 different salaries' },
-      { id: 'e9', date: '2024-10-23', type: 'edited', label: 'Telegram Added', detail: 'Added Telegram interview requirement' },
-    ],
-  },
-};
-
-export const mockAlerts: JobAlert[] = [
-  { id: 'a1', jobTitle: 'Data Entry Specialist', company: 'QuickHire Solutions', type: 'salary_changed', message: 'Salary changed from $45k to $60k — 33% increase is suspicious', timestamp: '12 min ago', severity: 'warning' },
-  { id: 'a2', jobTitle: 'Frontend Developer', company: 'TechStart Inc.', type: 'reposted', message: 'Job reposted after only 2 days — typical fake pattern', timestamp: '1 hour ago', severity: 'danger' },
-  { id: 'a3', jobTitle: 'Product Manager', company: 'Stripe', type: 'new_listing', message: 'New matching job found on LinkedIn', timestamp: '3 hours ago', severity: 'info' },
-  { id: 'a4', jobTitle: 'Marketing Executive', company: 'Global Digital Corp', type: 'removed', message: 'Listing removed after being flagged by 15 users', timestamp: '5 hours ago', severity: 'danger' },
-  { id: 'a5', jobTitle: 'Senior Backend Engineer', company: 'Razorpay', type: 'deadline', message: 'Application deadline approaching in 2 days', timestamp: '1 day ago', severity: 'info' },
-];
-
-export const similarJobs: SimilarJob[] = [
-  { id: 'sj1', title: 'Frontend Engineer', company: 'Razorpay', location: 'Bangalore, India', salary: '$35k-$50k', trustScore: 94, verified: true, platform: 'LinkedIn' },
-  { id: 'sj2', title: 'React Developer', company: 'Vercel Inc.', location: 'Remote (Global)', salary: '$130k-$170k', trustScore: 97, verified: true, platform: 'Company Site' },
-  { id: 'sj3', title: 'UI Engineer', company: 'Google', location: 'Hyderabad, India', salary: '$45k-$70k', trustScore: 96, verified: true, platform: 'LinkedIn' },
-]
-
-export const initialTrackedJobs: TrackedJob[] = [
-  { id: 't1', title: 'Senior Frontend Engineer', company: 'Vercel Inc.', location: 'Remote', salary: '$140k-$180k', trustScore: 88, status: 'saved', logo: 'V' },
-  { id: 't2', title: 'Product Designer', company: 'Stripe', location: 'San Francisco', salary: '$120k-$160k', trustScore: 92, status: 'applied', appliedDate: 'Oct 18', logo: 'S' },
-  { id: 't3', title: 'Backend Engineer', company: 'Razorpay', location: 'Bangalore', salary: '$30k-$45k', trustScore: 90, status: 'interview', appliedDate: 'Oct 10', notes: 'Technical round on Oct 25', logo: 'R' },
-  { id: 't4', title: 'Full Stack Developer', company: 'Google', location: 'Hyderabad', salary: '$50k-$75k', trustScore: 95, status: 'offer', appliedDate: 'Sep 28', notes: 'Offer received! Negotiating', logo: 'G' },
-  { id: 't5', title: 'Data Analyst', company: 'QuickHire Solutions', location: 'Remote', salary: '$45k-$60k', trustScore: 42, status: 'rejected', logo: 'Q' },
-]
+// ===== Empty - No Fake Data =====
+export const verificationResults: Record<string, VerificationResult> = {};
+export const companies: Record<string, CompanyInfo> = {};
+export const jobHistoryData: Record<string, JobHistory> = {};
+export const mockAlerts: JobAlert[] = [];
+export const similarJobs: SimilarJob[] = [];
+export const initialTrackedJobs: TrackedJob[] = [];
 
 export const testimonials: Testimonial[] = [
   {
@@ -315,7 +135,159 @@ export const testimonials: Testimonial[] = [
   },
 ]
 
-// ===== Utilities =====
+// ===== UNIVERSAL LOGIC - Works For Any Company / Any Job In World =====
+
+export function extractDomain(input: string): string {
+  try {
+    let url = input.trim().toLowerCase();
+    if (!url.includes('://') && !url.includes('.')) {
+      // Company name hai, domain guess karo - google -> google.com
+      const clean = url.replace(/[^a-z0-9]/g, '');
+      return clean + '.com';
+    }
+    if (!url.includes('://')) url = 'https://' + url;
+    const u = new URL(url);
+    return u.hostname.replace('www.', '');
+  } catch {
+    return input.toLowerCase().replace(/[^a-z0-9.]/g, '');
+  }
+}
+
+export function getPlatformFromUrl(url: string): string {
+  const l = url.toLowerCase();
+  if (l.includes('linkedin')) return 'LinkedIn';
+  if (l.includes('naukri')) return 'Naukri';
+  if (l.includes('indeed')) return 'Indeed';
+  if (l.includes('facebook')) return 'Facebook Jobs';
+  if (l.includes('telegram')) return 'Telegram';
+  if (l.includes('instagram')) return 'Instagram';
+  if (l.includes('glassdoor')) return 'Glassdoor';
+  if (l.includes('monster')) return 'Monster';
+  return 'Job Board';
+}
+
+// Ye main function hai - Koi bhi job daalo, ye score bana dega
+export function analyzeAnyJob(input: {
+  url?: string;
+  jobTitle?: string;
+  company?: string;
+  location?: string;
+  salary?: string;
+  description?: string;
+  email?: string;
+}): VerificationResult {
+  const text = `${input.url || ''} ${input.jobTitle || ''} ${input.company || ''} ${input.description || ''} ${input.email || ''}`.toLowerCase();
+  const domain = extractDomain(input.url || input.company || '');
+  let score = 0;
+  const checks: RiskCheck[] = [];
+
+  // 1. Email Check
+  if (text.includes('@gmail') || text.includes('@yahoo') || text.includes('@hotmail')) {
+    score += 25;
+    checks.push({ id: 'email', label: 'Official Email', status: 'fail', detail: `Uses personal Gmail/Yahoo instead of @${domain} - major red flag`, icon: 'Mail' });
+  } else {
+    checks.push({ id: 'email', label: 'Official Email', status: 'pass', detail: `No personal email detected. Check @${domain}`, icon: 'Mail' });
+  }
+
+  // 2. Telegram / WhatsApp Check
+  if (text.includes('telegram') || text.includes('wa.me') || text.includes('whatsapp')) {
+    score += 30;
+    checks.push({ id: 'messaging', label: 'Telegram/WhatsApp Flag', status: 'fail', detail: 'Asks to contact on Telegram/WhatsApp - 90% fake jobs use this', icon: 'MessageCircle' });
+  } else {
+    checks.push({ id: 'messaging', label: 'Telegram/WhatsApp Flag', status: 'pass', detail: 'No personal messaging apps requested', icon: 'MessageCircle' });
+  }
+
+  // 3. Salary Trap Check - Urgent + High Salary
+  if (text.includes('urgent') || text.includes('immediate joining') || text.includes('no experience') || text.includes('no interview')) {
+    score += 20;
+    checks.push({ id: 'salary', label: 'Salary Trap', status: 'warning', detail: 'Uses urgency words: Urgent / Immediate Joining / No Interview', icon: 'DollarSign' });
+  } else if (text.includes('registration fee') || text.includes('security deposit') || text.includes('training fee') || text.includes('pay to join') || text.includes('₹') && text.includes('deposit')) {
+    score += 35;
+    checks.push({ id: 'salary', label: 'Salary Trap', status: 'fail', detail: 'Asks for registration / deposit fee - 100% scam pattern', icon: 'DollarSign' });
+  } else {
+    checks.push({ id: 'salary', label: 'Salary Trap', status: 'pass', detail: 'No fee / urgency trap detected in description', icon: 'DollarSign' });
+  }
+
+  // 4. Domain Check - New / Suspicious domain
+  const suspiciousTLD = domain.endsWith('.xyz') || domain.endsWith('.top') || domain.endsWith('.click') || domain.endsWith('.online') || domain.endsWith('.site');
+  if (suspiciousTLD) {
+    score += 20;
+    checks.push({ id: 'domain', label: 'Domain Age', status: 'warning', detail: `${domain} uses suspicious TLD - often used for scams`, icon: 'Globe' });
+  } else {
+    checks.push({ id: 'domain', label: 'Domain Age', status: 'pass', detail: `${domain} - Check RDAP for real age below`, icon: 'Globe' });
+  }
+
+  // 5. Duplicate / Work From Home Trap
+  if (text.includes('work from home') && text.includes('earn') && (text.includes('50000') || text.includes('80000') || text.includes('1 lakh'))) {
+    score += 15;
+    checks.push({ id: 'duplicate', label: 'Duplicate Check', status: 'warning', detail: 'High-pay Work From Home pattern - commonly duplicated scam', icon: 'Copy' });
+  } else {
+    checks.push({ id: 'duplicate', label: 'Duplicate Check', status: 'pass', detail: 'No duplicate pattern detected', icon: 'Copy' });
+  }
+
+  const status: 'safe' | 'caution' | 'danger' = score >= 70 ? 'danger' : score >= 40 ? 'caution' : 'safe';
+
+  return {
+    riskScore: Math.min(100, score),
+    status,
+    jobTitle: input.jobTitle || 'Job from Link',
+    company: input.company || domain.split('.')[0].toUpperCase(),
+    location: input.location || 'Check in job post',
+    salary: input.salary || 'Not mentioned in link',
+    postedDate: 'Just now',
+    platform: getPlatformFromUrl(input.url || ''),
+    checks,
+  };
+}
+
+// Company Verification - Koi bhi company name daalo
+export function analyzeAnyCompany(companyName: string): CompanyInfo {
+  const domain = extractDomain(companyName);
+  const name = companyName.trim();
+  return {
+    name: name,
+    website: domain,
+    domainAge: 'Check live via RDAP - https://rdap.org/domain/' + domain,
+    domainAgeYears: 0,
+    gstNumber: 'Search on gst.gov.in for Indian companies',
+    legalStatus: 'Verify on MCA / LinkedIn / Crunchbase',
+    employeeCount: 'Check LinkedIn for real count',
+    trustBadge: 'Unverified',
+    founded: 'Check website footer',
+    industry: 'Check LinkedIn',
+    description: `Live check for ${name} (${domain}). This company is not in our pre-saved list - verification is done from live domain + description analysis.`,
+  };
+}
+
+// Job History - Koi bhi job search karne ke liye
+export function createJobHistory(jobTitle: string, company: string): JobHistory {
+  return {
+    jobTitle,
+    company,
+    repostCount: 0,
+    salaryChanges: 0,
+    locationChanges: 0,
+    firstPosted: new Date().toISOString().split('T')[0],
+    lastSeen: new Date().toISOString().split('T')[0],
+    events: [
+      { id: 'e1', date: new Date().toISOString().split('T')[0], type: 'posted', label: 'Job Checked Now', detail: `User searched for ${jobTitle} at ${company}. History will build as user tracks this job.` },
+    ],
+  };
+}
+
+// Tracker - User apni job khud add karega
+export function createTrackedJob(title: string, company: string, location: string, salary: string, trustScore: number): TrackedJob {
+  return {
+    id: 't-' + Date.now(),
+    title,
+    company,
+    location,
+    salary,
+    trustScore,
+    status: 'saved',
+    logo: company.charAt(0).toUpperCase(),
+  };
+}
 
 export function getRiskColor(score: number): string {
   if (score < 40) return '#10B981'
@@ -340,13 +312,25 @@ export function getCheckIcon(name: string): string {
   return icons[name] || name
 }
 
+// Old function - ab ye bhi universal hai
 export function detectJobType(url: string): 'safe' | 'caution' | 'danger' {
-  const lower = url.toLowerCase()
-  if (lower.includes('telegram') || lower.includes('wa.me') || lower.includes('facebook') || lower.includes('urgent')) {
-    return 'danger'
+  const result = analyzeAnyJob({ url });
+  return result.status;
+}
+
+// Real Domain Age - Browser se live check (RDAP - Free, No API Key)
+export async function fetchRealDomainAge(domain: string): Promise<string> {
+  try {
+    const res = await fetch(`https://rdap.org/domain/${domain}`);
+    const data = await res.json();
+    const event = data.events?.find((e: any) => e.eventAction === 'registration');
+    if (event?.eventDate) {
+      const date = new Date(event.eventDate);
+      const years = (Date.now() - date.getTime()) / (1000 * 60 * 60 * 24 * 365);
+      return `Registered on ${date.toDateString()} - ${years.toFixed(1)} years old`;
+    }
+    return 'Domain not found in RDAP';
+  } catch {
+    return 'Could not fetch live domain age';
   }
-  if (lower.includes('naukri') || lower.includes('quickhire') || lower.includes('workfromhome') || lower.includes('data-entry')) {
-    return 'caution'
-  }
-  return 'safe'
 }
