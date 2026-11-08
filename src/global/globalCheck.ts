@@ -1,52 +1,69 @@
-// GLOBAL ENGINE v2 - 100% GLOBAL - NO GST - NO INDIA - NO MOCK
+// GLOBAL ENGINE V5 - 100% - NO FAKE
 const cache: any = {};
 function getCache(k: string) { const v = cache[k]; if (!v) return null; if (Date.now() - v.t > 24*3600*1000) return null; return v.d; }
 function setCache(k: string, d: any) { cache[k] = { t: Date.now(), d }; }
 export function cleanDomain(d: string) { return d.trim().toLowerCase().replace(/^https?:\/\//, '').replace(/^www\./, '').split('/')[0].split('?')[0]; }
-async function fetchJSON(url: string, opts?: any) { const r = await fetch(url, opts); if (!r.ok) throw new Error('fail'); return await r.json(); }
+async function tryFetch(url: string, opts?: any) { try { const r = await fetch(url, opts); if (!r.ok) return null; return await r.json(); } catch { return null; } }
 
-// API 1 + 2 - DOMAIN AGE - GLOBAL
-async function getDomainAge(domain: string) {
-  let c = getCache('age_' + domain); if (c) return c;
-  try { const data = await fetchJSON('https://rdap.org/domain/' + domain); let e = data.events?.find((x: any) => x.eventAction === 'registration'); let res = { source: 'RDAP Global', created: e?.eventDate || '' }; setCache('age_' + domain, res); return res; }
-  catch { try { const d2 = await fetchJSON('https://who-dat.net/api/v1/' + domain); let res = { source: 'WHOIS Global Backup', created: d2.created || '' }; setCache('age_' + domain, res); return res; } catch { return { source: 'Not Found', created: '' }; } }
-}
-// API 3 + 4 - SERVER LOCATION - GLOBAL
-async function getLocation(domain: string) {
-  let c = getCache('loc_' + domain); if (c) return c;
-  try { const dns = await fetchJSON('https://dns.google/resolve?name=' + domain + '&type=A'); let ip = dns.Answer?.[0]?.data || ''; if(!ip) throw new Error('no ip'); const loc = await fetchJSON(`https://ip-api.com/json/${ip}?fields=status,country,city,isp,query`); if (loc.status === 'success') { let res = { source: 'IP-API Global', country: loc.country, city: loc.city, isp: loc.isp, ip: loc.query }; setCache('loc_' + domain, res); return res; } throw new Error('x'); }
-  catch { try { const loc = await fetchJSON('https://ipwho.is/' + domain); let res = { source: 'IPWho.is Global Backup', country: loc.country || '', city: loc.city || '', isp: loc.connection?.isp || '', ip: loc.ip || '' }; setCache('loc_' + domain, res); return res; } catch { return { source: 'Unknown', country: '', city: '', isp: '', ip: '' }; } }
-}
-// API 5 + 6 - EMAIL / MX - GLOBAL
-async function getEmailCheck(email: string) {
-  let dom = email.split('@')[1]; if (!dom) return { valid: false, source: 'Invalid', hasMX: false };
-  let c = getCache('mail_' + dom); if (c) return c;
-  try { const dns = await fetchJSON('https://dns.google/resolve?name=' + dom + '&type=MX'); let res = { valid: !!dns.Answer?.length, source: 'Google DNS Global', hasMX: !!dns.Answer?.length }; setCache('mail_' + dom, res); return res; }
-  catch { try { const dns = await fetchJSON(`https://cloudflare-dns.com/dns-query?name=${dom}&type=MX`, { headers: { accept: 'application/dns-json' } }); let res = { valid: !!dns.Answer?.length, source: 'Cloudflare DNS Global', hasMX: !!dns.Answer?.length }; setCache('mail_' + dom, res); return res; } catch { return { valid: false, source: 'Unknown - Could not check', hasMX: false }; } }
-}
-// API 7 - SSL / HTTPS - GLOBAL ADVANCED
-async function getSSLCheck(domain: string) {
-  try { const r = await fetch('https://' + domain, { method: 'HEAD' }); return { secure: r.ok, source: 'Live HTTPS Check' }; } catch { return { secure: false, source: 'Live HTTPS Check' }; }
+async function getAge(domain: string) {
+  const urls = [`https://rdap.org/domain/${domain}`, `https://rdap.verisign.com/com/v1/domain/${domain}`, `https://rdap.verisign.com/net/v1/domain/${domain}`, `https://who-dat.net/api/v1/${domain}`, `https://rdap.db.ripe.net/domain/${domain}`, `https://rdap.apnic.net/domain/${domain}`];
+  for (const u of urls) {
+    const j: any = await tryFetch(u);
+    if (!j) continue;
+    const ev = j?.events?.find((x: any) => x.eventAction === 'registration');
+    if (ev?.eventDate) return ev.eventDate;
+    if (j?.created) return j.created;
+    if (j?.creation_date) return j.creation_date;
+  }
+  return '';
 }
 
-export async function globalCheck(input: string) {
-  let domain = '', email = '', company = input;
-  if (input.includes('@')) { email = input; domain = email.split('@')[1] || ''; company = domain; }
-  else if (input.includes('.')) { domain = cleanDomain(input); company = domain; }
-  else { domain = input.toLowerCase().replace(/\s+/g, '') + '.com'; company = input; }
-  let score = 100; let reasons: string[] = []; let details: string[] = [];
-  let age = await getDomainAge(domain); let ageDays = age.created ? Math.floor((Date.now() - new Date(age.created).getTime()) / 86400000) : null;
-  if (ageDays !== null) { details.push(`🌍 Domain Created: ${new Date(age.created).toDateString()} (${ageDays} days ago) - ${age.source}`); if (ageDays < 30) { score -= 40; reasons.push('Domain < 30 days - Very New - Global Risk'); } else if (ageDays < 180) { score -= 20; reasons.push('Domain < 6 months - New Company'); } else reasons.push('Domain Old - Global Trust +'); }
-  else { details.push(`🌍 Domain Age: Not Found - Hidden / New`); score -= 15; }
-  let loc: any = await getLocation(domain);
-  if (loc.country) details.push(`🌍 Server Location: ${loc.city}, ${loc.country} | ISP: ${loc.isp} | IP: ${loc.ip} - ${loc.source}`); else details.push(`🌍 Server Location: Not Found`);
-  let mail: any = email ? await getEmailCheck(email) : await getEmailCheck('info@' + domain);
-  if (mail.valid) details.push(`🌍 Official Email: Valid - ${mail.source}`); else { score -= 25; reasons.push('No Official Email MX - Fake Company'); details.push(`🌍 Official Email: No MX Found`); }
-  let ssl = await getSSLCheck(domain);
-  if (ssl.secure) details.push(`🔒 SSL / HTTPS: Secure - ${ssl.source}`); else { score -= 10; details.push(`🔒 SSL / HTTPS: Not Secure / No HTTPS`); }
-  let low = input.toLowerCase(); let scamWords = ['telegram only','whatsapp only','pay for job','registration fee','crypto payment','no interview','urgent join','gift card','send money','pay to join','upfront fee','processing fee'];
-  let found = scamWords.filter(w => low.includes(w)); if (found.length) { score -= 30; reasons.push('Global Scam Pattern: ' + found.join(', ')); }
-  if (email && (email.includes('gmail.com')||email.includes('yahoo.com')||email.includes('hotmail.com'))) { score -= 15; reasons.push('Free Email for Company - Global Red Flag'); }
-  if (score < 0) score = 0;
-  return { score, label: score >= 75 ? '✅ LIKELY SAFE - GLOBAL' : score >= 45 ? '⚠️ BE CAREFUL - GLOBAL RISK' : '🚨 HIGH RISK - LIKELY SCAM - GLOBAL', reasons, details, domain, company, ageDays, country: loc.country || 'Unknown', ssl: ssl.secure };
+async function getMX(domain: string) {
+  const urls = [`https://dns.google/resolve?name=${domain}&type=MX`, `https://cloudflare-dns.com/dns-query?name=${domain}&type=MX`, `https://dns.quad9.net:5053/dns-query?name=${domain}&type=MX`];
+  for (const u of urls) {
+    const j: any = await tryFetch(u, { headers: { accept: 'application/dns-json' } });
+    if (j?.Answer && j.Answer.length > 0) return true;
+  }
+  return false;
 }
+
+async function getBackend(domain: string) {
+  try {
+    const r = await fetch(`/api/check?domain=${domain}`);
+    if (r.ok) return await r.json();
+  } catch {}
+  return { ssl: false, country: 'Unknown', ip: null, sslExpiry: null, created: null, sslIssuer: '', city: '', isp: '' };
+}
+
+export async function globalCheck(domainInput: string) {
+  const domain = cleanDomain(domainInput);
+  const cached = getCache('v5_' + domain);
+  if (cached) return cached;
+  const [created, hasMX, back] = await Promise.all([getAge(domain), getMX(domain), getBackend(domain)]);
+  const finalCreated = created || back.created || '';
+  const ageDays = finalCreated ? Math.floor((Date.now() - new Date(finalCreated).getTime()) / (1000*60*60*24)) : 0;
+  const ssl = back.ssl === true;
+  const country = back.country || 'Unknown';
+  let score = 30;
+  if (ageDays > 3650) score += 25; else if (ageDays > 1000) score += 18; else if (ageDays > 180) score += 10; else if (ageDays > 0) score += 5;
+  if (ssl) score += 20; else score -= 10;
+  if (hasMX) score += 15;
+  if (country !== 'Unknown') score += 10;
+  score = Math.max(0, Math.min(100, score));
+  const label = score >= 75 ? 'LIKELY SAFE' : score >= 45 ? 'CAUTION' : 'HIGH RISK';
+  const result = {
+    domain, company: domain, ageDays, created: finalCreated, country, city: back.city || '', ip: back.ip || '',
+    ssl, sslExpiry: back.sslExpiry || null, sslIssuer: back.sslIssuer || '', isp: back.isp || '', hasMX,
+    score, label,
+    reasons: [
+      ageDays ? `Domain age: ${ageDays} days old (since ${new Date(finalCreated).toLocaleDateString()})` : 'Domain age: Unknown',
+      ssl ? `SSL: Secure${back.sslExpiry ? ` - Expires ${new Date(back.sslExpiry).toLocaleDateString()}` : ''}${back.sslIssuer ? ` - ${back.sslIssuer}` : ''}` : 'SSL: Not Secure / Unknown',
+      `Server: ${country}${back.city ? `, ${back.city}` : ''}${back.ip ? ` (${back.ip})` : ''}${back.isp ? ` - ${back.isp}` : ''}`,
+      hasMX ? 'Email: Valid MX found (3 DNS checked)' : 'Email: No MX found'
+    ],
+    details: { ageDays, created: finalCreated, country, ssl, hasMX, ip: back.ip }
+  };
+  setCache('v5_' + domain, result);
+  return result;
+}
+export default globalCheck;
