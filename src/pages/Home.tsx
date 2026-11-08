@@ -228,7 +228,7 @@ export default function Home({ onNavigate }: HomeProps) {
                   </div>
 
                   <div className="flex flex-wrap items-center justify-center lg:justify-start gap-3 mt-5">
-                    <button className="flex items-center gap-2 px-4 py-2 bg-white/[0.06] hover:bg-white/[0.1] border border-white/10 rounded-lg text-sm font-medium text-white transition-all">
+                    <button onClick={() => onNavigate('history')} className="flex items-center gap-2 px-4 py-2 bg-white/[0.06] hover:bg-white/[0.1] border border-white/10 rounded-lg text-sm font-medium text-white transition-all">
                       <Bookmark className="w-4 h-4" /> Save to Tracker
                     </button>
                     <button onClick={() => onNavigate('history')} className="flex items-center gap-2 px-4 py-2 bg-white/[0.06] hover:bg-white/[0.1] border border-white/10 rounded-lg text-sm font-medium text-white transition-all">
