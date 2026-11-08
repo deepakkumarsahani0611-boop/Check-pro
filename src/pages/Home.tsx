@@ -332,7 +332,7 @@ export default function Home({ onNavigate }: HomeProps) {
         <section className="relative max-w-7xl mx-auto px-6 pb-24">
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
             {[
-              { icon: ShieldCheck, title: 'Fake Job Checker', desc: '5-point verification: domain age, official email, salary trap, duplicate, messaging flags', page: 'home', color: 'text-blue-400', bg: 'bg-blue-500/10', border: 'border-blue-500/20' },
+              { icon: ShieldCheck, title: 'Fake Job Checker', desc: '5-point verification: domain age, official email, salary trap, duplicate, messaging flags', page: 'fake', color: 'text-blue-400', bg: 'bg-blue-500/10', border: 'border-blue-500/20' },
               { icon: Building2, title: 'Company Verification', desc: 'Search any company — website, domain age, GST status, employee count, trust badge', page: 'company', color: 'text-emerald-400', bg: 'bg-emerald-500/10', border: 'border-emerald-500/20' },
               { icon: TrendingUp, title: 'Job Listing History', desc: 'Timeline of reposts, salary changes, location shifts — spot the fake loop pattern', page: 'history', color: 'text-purple-400', bg: 'bg-purple-500/10', border: 'border-purple-500/20' },
               { icon: Sparkles, title: 'Global Job Monitoring', desc: 'Watch any job. We monitor 50+ boards and alert you on salary or repost changes', page: 'alerts', color: 'text-amber-400', bg: 'bg-amber-500/10', border: 'border-amber-500/20' },
