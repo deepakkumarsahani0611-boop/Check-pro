@@ -14,7 +14,7 @@ async function getDomainAge(domain: string) {
 // API 3 + 4 - SERVER LOCATION - GLOBAL
 async function getLocation(domain: string) {
   let c = getCache('loc_' + domain); if (c) return c;
-  try { const dns = await fetchJSON('https://dns.google/resolve?name=' + domain + '&type=A'); let ip = dns.Answer?.[0]?.data || '8.8.8.8'; const loc = await fetchJSON(`https://ip-api.com/json/${ip}?fields=status,country,city,isp,query`); if (loc.status === 'success') { let res = { source: 'IP-API Global', country: loc.country, city: loc.city, isp: loc.isp, ip: loc.query }; setCache('loc_' + domain, res); return res; } throw new Error('x'); }
+  try { const dns = await fetchJSON('https://dns.google/resolve?name=' + domain + '&type=A'); let ip = dns.Answer?.[0]?.data || ''; if(!ip) throw new Error('no ip'); const loc = await fetchJSON(`https://ip-api.com/json/${ip}?fields=status,country,city,isp,query`); if (loc.status === 'success') { let res = { source: 'IP-API Global', country: loc.country, city: loc.city, isp: loc.isp, ip: loc.query }; setCache('loc_' + domain, res); return res; } throw new Error('x'); }
   catch { try { const loc = await fetchJSON('https://ipwho.is/' + domain); let res = { source: 'IPWho.is Global Backup', country: loc.country || '', city: loc.city || '', isp: loc.connection?.isp || '', ip: loc.ip || '' }; setCache('loc_' + domain, res); return res; } catch { return { source: 'Unknown', country: '', city: '', isp: '', ip: '' }; } }
 }
 // API 5 + 6 - EMAIL / MX - GLOBAL
@@ -22,7 +22,7 @@ async function getEmailCheck(email: string) {
   let dom = email.split('@')[1]; if (!dom) return { valid: false, source: 'Invalid', hasMX: false };
   let c = getCache('mail_' + dom); if (c) return c;
   try { const dns = await fetchJSON('https://dns.google/resolve?name=' + dom + '&type=MX'); let res = { valid: !!dns.Answer?.length, source: 'Google DNS Global', hasMX: !!dns.Answer?.length }; setCache('mail_' + dom, res); return res; }
-  catch { try { const dns = await fetchJSON(`https://cloudflare-dns.com/dns-query?name=${dom}&type=MX`, { headers: { accept: 'application/dns-json' } }); let res = { valid: !!dns.Answer?.length, source: 'Cloudflare DNS Global', hasMX: !!dns.Answer?.length }; setCache('mail_' + dom, res); return res; } catch { return { valid: true, source: 'Fallback', hasMX: true }; } }
+  catch { try { const dns = await fetchJSON(`https://cloudflare-dns.com/dns-query?name=${dom}&type=MX`, { headers: { accept: 'application/dns-json' } }); let res = { valid: !!dns.Answer?.length, source: 'Cloudflare DNS Global', hasMX: !!dns.Answer?.length }; setCache('mail_' + dom, res); return res; } catch { return { valid: false, source: 'Unknown - Could not check', hasMX: false }; } }
 }
 // API 7 - SSL / HTTPS - GLOBAL ADVANCED
 async function getSSLCheck(domain: string) {
