@@ -12,6 +12,7 @@ const navItems = [
   { id: 'company', label: 'Companies' },
   { id: 'history', label: 'Job History' },
   { id: 'alerts', label: 'Alerts' },
+    { id: 'fake', label: 'Fake Job Checker' },
   { id: 'tracker', label: 'Tracker' },
   { id: 'pricing', label: 'Pricing' },
 ];
