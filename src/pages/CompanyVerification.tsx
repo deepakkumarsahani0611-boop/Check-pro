@@ -9,27 +9,19 @@ export default function CompanyVerification() {
   const [result, setResult] = useState<any | null>(null);
   const [notFound, setNotFound] = useState(false);
 
-  // REAL SSL CHECK - isi file me
-  const checkRealSSL = async (domain: string) => {
-    try {
-      const cleanDomain = domain.replace(/^https?:\/\//, '').replace(/^www\./, '').split('/')[0];
-      await fetch(`https://${cleanDomain}`, { mode: 'no-cors' });
-      return true;
-    } catch {
-      return false;
-    }
-  };
+  // FIX 1: Nakli checkRealSSL hata diya - ab sirf globalCheck ka asli SSL aayega (crt.sh se)
 
-  const handleSearch = async () => {
-    if (!query.trim()) return;
+  const handleSearch = async (value?: string) => {
+    const searchValue = (value || query).trim();
+    if (!searchValue) return;
+    setQuery(searchValue);
     setLoading(true);
     setResult(null);
     setNotFound(false);
     try {
-      const res: any = await globalCheck(query.trim());
-      // Real SSL check karke result me daal rahe hai
-      const realSSL = await checkRealSSL(res.domain || query.trim());
-      setResult({ ...res, ssl: realSSL });
+      const res: any = await globalCheck(searchValue);
+      // FIX: Yahan overwrite nahi kar rahe, globalCheck ka asli res hi use kar rahe hai
+      setResult(res);
     } catch {
       setNotFound(true);
     }
@@ -57,7 +49,7 @@ export default function CompanyVerification() {
               <Search className="w-5 h-5 text-gray-500" />
               <input type="text" value={query} onChange={(e) => setQuery(e.target.value)} onKeyDown={(e) => e.key === 'Enter' && handleSearch()} placeholder="Search company / domain / email (e.g. google.com)" className="flex-1 bg-transparent text-[15px] text-white placeholder:text-gray-600 outline-none" />
             </div>
-            <button onClick={handleSearch} disabled={!query.trim() || loading} className="flex items-center justify-center gap-2 px-6 py-3 bg-emerald-600 hover:bg-emerald-500 disabled:opacity-40 text-white font-semibold text-sm rounded-xl transition-all">
+            <button onClick={() => handleSearch()} disabled={!query.trim() || loading} className="flex items-center justify-center gap-2 px-6 py-3 bg-emerald-600 hover:bg-emerald-500 disabled:opacity-40 text-white font-semibold text-sm rounded-xl transition-all">
               {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Search className="w-4 h-4" />}
               {loading ? 'Checking...' : 'Search'}
             </button>
@@ -67,7 +59,7 @@ export default function CompanyVerification() {
         <div className="flex flex-wrap items-center justify-center gap-2 mb-12">
           <span className="text-xs text-gray-600">Try:</span>
           {['google.com', 'amazon.com', 'microsoft.com', 'vercel.com'].map((name) => (
-            <button key={name} onClick={() => { setQuery(name); }} className="text-xs text-gray-500 hover:text-white px-2.5 py-1 rounded-lg border border-white/5 hover:border-white/10 transition-all">{name}</button>
+            <button key={name} onClick={() => handleSearch(name)} className="text-xs text-gray-500 hover:text-white px-2.5 py-1 rounded-lg border border-white/5 hover:border-white/10 transition-all">{name}</button>
           ))}
         </div>
 
@@ -150,4 +142,3 @@ export default function CompanyVerification() {
     </div>
   );
 }          
-          
