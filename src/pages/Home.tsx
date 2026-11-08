@@ -336,7 +336,7 @@ export default function Home({ onNavigate }: HomeProps) {
               { icon: Building2, title: 'Company Verification', desc: 'Search any company — website, domain age, GST status, employee count, trust badge', page: 'company', color: 'text-emerald-400', bg: 'bg-emerald-500/10', border: 'border-emerald-500/20' },
               { icon: TrendingUp, title: 'Job Listing History', desc: 'Timeline of reposts, salary changes, location shifts — spot the fake loop pattern', page: 'history', color: 'text-purple-400', bg: 'bg-purple-500/10', border: 'border-purple-500/20' },
               { icon: Sparkles, title: 'Global Job Monitoring', desc: 'Watch any job. We monitor 50+ boards and alert you on salary or repost changes', page: 'alerts', color: 'text-amber-400', bg: 'bg-amber-500/10', border: 'border-amber-500/20' },
-              { icon: Briefcase, title: 'Application Tracker', desc: 'Kanban board: Saved, Applied, Interview, Offer, Rejected — save any verified job', page: 'tracker', color: 'text-cyan-400', bg: 'bg-cyan-500/10', border: 'border-cyan-500/20' },
+              { icon: Briefcase, title: 'Application Tracker', desc: 'Kanban board: Saved, Applied, Interview, Offer, Rejected — save any verified job', page: 'history', color: 'text-cyan-400', bg: 'bg-cyan-500/10', border: 'border-cyan-500/20' },
               { icon: ShieldCheck, title: 'Premium Plans', desc: 'Free: 5 checks. Pro: 500 checks + AI report + PDF export. Enterprise: API + global monitoring', page: 'pricing', color: 'text-pink-400', bg: 'bg-pink-500/10', border: 'border-pink-500/20' },
             ].map((f, i) => (
               <motion.button
