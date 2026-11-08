@@ -7,7 +7,7 @@ import Home from '@/pages/Home';
 import CompanyVerification from '@/pages/CompanyVerification';
 import JobHistory from '@/pages/JobHistory';
 import Alerts from '@/pages/Alerts';
-import Tracker from '@/pages/Tracker';
+import FakeJobChecker from '@/pages/FakeJobChecker';
 import Pricing from '@/pages/Pricing';
 import PrivacyPolicy from '@/pages/PrivacyPolicy';
 import TermsOfService from '@/pages/TermsOfService';
@@ -42,7 +42,7 @@ function App() {
       case 'company': return <CompanyVerification />;
       case 'history': return <JobHistory />;
       case 'alerts': return <Alerts />;
-      case 'tracker': return <Tracker />;
+      case 'fake': return <FakeJobChecker />;
       case 'pricing': return <Pricing onNavigate={setPage} />;
       case 'privacy': return <PrivacyPolicy />;
       case 'terms': return <TermsOfService />;
