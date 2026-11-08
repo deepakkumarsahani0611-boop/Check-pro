@@ -9,6 +9,17 @@ export default function CompanyVerification() {
   const [result, setResult] = useState<any | null>(null);
   const [notFound, setNotFound] = useState(false);
 
+  // REAL SSL CHECK - isi file me
+  const checkRealSSL = async (domain: string) => {
+    try {
+      const cleanDomain = domain.replace(/^https?:\/\//, '').replace(/^www\./, '').split('/')[0];
+      await fetch(`https://${cleanDomain}`, { mode: 'no-cors' });
+      return true;
+    } catch {
+      return false;
+    }
+  };
+
   const handleSearch = async () => {
     if (!query.trim()) return;
     setLoading(true);
@@ -16,7 +27,9 @@ export default function CompanyVerification() {
     setNotFound(false);
     try {
       const res: any = await globalCheck(query.trim());
-      setResult(res);
+      // Real SSL check karke result me daal rahe hai
+      const realSSL = await checkRealSSL(res.domain || query.trim());
+      setResult({ ...res, ssl: realSSL });
     } catch {
       setNotFound(true);
     }
@@ -136,6 +149,5 @@ export default function CompanyVerification() {
       </div>
     </div>
   );
-}
-          
+}          
           
