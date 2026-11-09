@@ -1,4 +1,4 @@
-// src/lib/worldCheck.ts - 100% REAL - NO DUMMY - GLOBAL PROFESSIONAL - 1 ENGINE - FAST + MAX LIMIT
+// src/lib/worldCheck.ts - 100% REAL - NO DUMMY - GLOBAL PROFESSIONAL - 1 ENGINE - FAST + MAX LIMIT - SEARCH ACCORDING
 const cleanDomain = (input: string) => {
   try {
     const url = input.includes('://') ? input : `https://${input}`;
@@ -6,7 +6,6 @@ const cleanDomain = (input: string) => {
   } catch { return input.replace(/^https?:\/\//, '').replace(/^www\./, '').split('/')[0].toLowerCase(); }
 };
 
-// CACHE - Dobara same domain check kiya to API dobara nahi jayegi - INSTANT + LIMIT BACHEGA
 const cache = new Map<string, any>();
 const fetchTimeout = async (url: string, ms = 6000) => {
   const ctrl = new AbortController();
@@ -57,15 +56,17 @@ export async function verifyCompanyReal(input: string) {
 }
 
 export async function searchJobsWorldwide(query: string) {
-  if (cache.has(`j-${query}`)) return cache.get(`j-${query}`);
+  const q = query.trim();
+  if (!q) return [];
+  if (cache.has(`j-${q}`)) return cache.get(`j-${q}`);
   const results: any[] = [];
   const [r1, r2] = await Promise.allSettled([
-    fetchTimeout(`https://remotive.com/api/remote-jobs?search=${encodeURIComponent(query)}&limit=20`, 6000).then(r => r.json()),
+    fetchTimeout(`https://remotive.com/api/remote-jobs?search=${encodeURIComponent(q)}&limit=20`, 6000).then(r => r.json()),
     fetchTimeout(`https://www.arbeitnow.com/api/job-board-api`, 6000).then(r => r.json()),
   ]);
   if (r1.status === 'fulfilled') (r1.value.jobs || []).forEach((j: any) => results.push({ title: j.title, company: j.company_name, location: j.candidate_required_location || 'Worldwide', url: j.url, type: j.job_type || 'Full-time', source: 'Remotive - Real', posted: j.publication_date, salary: j.salary || 'Not Disclosed', isReal: true }));
-  if (r2.status === 'fulfilled') (r2.value.data || []).filter((j: any) => (j.title + j.company_name).toLowerCase().includes(query.toLowerCase())).slice(0, 20).forEach((j: any) => results.push({ title: j.title, company: j.company_name, location: j.location || 'Worldwide', url: j.url, type: j.job_types?.join(', ') || 'Full-time', source: 'Arbeitnow - Real', posted: j.created_at, salary: 'Not Disclosed', isReal: true }));
-  cache.set(`j-${query}`, results);
+  if (r2.status === 'fulfilled') (r2.value.data || []).filter((j: any) => (j.title + ' ' + j.company_name + ' ' + (j.location || '')).toLowerCase().includes(q.toLowerCase())).slice(0, 20).forEach((j: any) => results.push({ title: j.title, company: j.company_name, location: j.location || 'Worldwide', url: j.url, type: j.job_types?.join(', ') || 'Full-time', source: 'Arbeitnow - Real', posted: j.created_at, salary: 'Not Disclosed', isReal: true }));
+  cache.set(`j-${q}`, results);
   return results;
 }
 
