@@ -309,7 +309,7 @@ export default function Home({ onNavigate }: HomeProps) {
                           <p className="text-xs text-gray-500 mb-3">{job.company} · {job.location}</p>
                           <div className="flex items-center justify-between pt-3 border-t border-white/[0.04]">
                             <span className="text-xs text-gray-400">{job.salary}</span>
-                            <button className="flex items-center gap-1 text-xs font-medium text-blue-400 hover:text-blue-300 transition-colors">
+                            <button onClick={() => onNavigate('history')} className="flex items-center gap-1 text-xs font-medium text-blue-400 hover:text-blue-300 transition-colors">
                               Apply <ExternalLink className="w-3 h-3" />
                             </button>
                           </div>
