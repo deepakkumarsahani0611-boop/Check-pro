@@ -1,4 +1,4 @@
-// src/lib/worldCheck.ts - 100% REAL, NO DUMMY
+// src/lib/worldCheck.ts - 100% REAL - NO DUMMY - GLOBAL PROFESSIONAL - 1 ENGINE - FAST + MAX LIMIT
 const cleanDomain = (input: string) => {
   try {
     const url = input.includes('://') ? input : `https://${input}`;
@@ -6,12 +6,21 @@ const cleanDomain = (input: string) => {
   } catch { return input.replace(/^https?:\/\//, '').replace(/^www\./, '').split('/')[0].toLowerCase(); }
 };
 
+// CACHE - Dobara same domain check kiya to API dobara nahi jayegi - INSTANT + LIMIT BACHEGA
+const cache = new Map<string, any>();
+const fetchTimeout = async (url: string, ms = 6000) => {
+  const ctrl = new AbortController();
+  const t = setTimeout(() => ctrl.abort(), ms);
+  try { const r = await fetch(url, { signal: ctrl.signal }); clearTimeout(t); return r; } catch { clearTimeout(t); throw new Error('timeout'); }
+};
+
 export async function verifyCompanyReal(input: string) {
   const domain = cleanDomain(input);
+  if (cache.has(`c-${domain}`)) return cache.get(`c-${domain}`);
   const [sslRes, rdapRes, dnsRes] = await Promise.allSettled([
-    fetch(`https://crt.sh/?q=${domain}&output=json`).then(r => r.json()),
-    fetch(`https://rdap.org/domain/${domain}`).then(r => r.json()),
-    fetch(`https://dns.google/resolve?name=${domain}&type=A`).then(r => r.json()),
+    fetchTimeout(`https://crt.sh/?q=${domain}&output=json`).then(r => r.json()),
+    fetchTimeout(`https://rdap.org/domain/${domain}`).then(r => r.json()),
+    fetchTimeout(`https://dns.google/resolve?name=${domain}&type=A`).then(r => r.json()),
   ]);
   const certs: any[] = sslRes.status === 'fulfilled' ? sslRes.value : [];
   const validCert = certs.filter((c: any) => new Date(c.not_after) > new Date());
@@ -19,41 +28,52 @@ export async function verifyCompanyReal(input: string) {
   const issuer = validCert[0]?.issuer_name || 'Unknown';
   const rdap: any = rdapRes.status === 'fulfilled' ? rdapRes.value : null;
   const createdEv = rdap?.events?.find((e: any) => e.eventAction === 'registration');
-  const created = createdEv ? createdEv.eventDate.split('T')[0] : null;
-  const ageDays = created ? Math.floor((Date.now() - new Date(created).getTime()) / 86400000) : null;
+  const created = createdEv ? createdEv.eventDate.split('T')[0] : 'Unknown';
+  const ageDays = created !== 'Unknown' ? Math.floor((Date.now() - new Date(created).getTime()) / 86400000) : 0;
+  const registrar = rdap?.entities?.[0]?.vcardArray?.[1]?.find((x: any) => x[0] === 'fn')?.[3] || 'Unknown';
   const ip = dnsRes.status === 'fulfilled' ? (dnsRes.value as any)?.Answer?.find((a: any) => a.type === 1)?.data : null;
   let country = 'Unknown';
   if (ip) {
     try {
-      const loc = await fetch(`https://ip-api.com/json/${ip}?fields=country,city,isp`).then(r => r.json());
+      const loc = await fetchTimeout(`https://ip-api.com/json/${ip}?fields=country,city,isp`, 5000).then(r => r.json());
       country = `${loc.country || 'Unknown'} - ${loc.city || ''} (${loc.isp || ''})`;
     } catch {}
   }
   let score = 0;
-  if (ssl) score += 40;
-  if (ageDays !== null) score += ageDays > 3650 ? 40 : ageDays > 1000 ? 30 : ageDays > 180 ? 20 : 5;
-  if (country !== 'Unknown') score += 20;
-  return { domain, company: domain.split('.')[0], ssl, issuer, created, ageDays, country, ip: ip || 'Unknown', score, label: score >= 75 ? 'Verified' : score >= 40 ? 'Suspicious' : 'Not Verified', isReal: true };
+  const reasons: string[] = [];
+  if (ssl) { score += 40; reasons.push('SSL Certificate Mila - crt.sh Verified'); } else { reasons.push('SSL Certificate Nahi Mila'); }
+  if (ageDays > 3650) { score += 40; reasons.push(`Domain ${ageDays} days purana - Highly Trusted`); }
+  else if (ageDays > 1000) { score += 30; reasons.push(`Domain ${ageDays} days purana`); }
+  else if (ageDays > 180) { score += 20; reasons.push(`Domain ${ageDays} days purana`); }
+  else if (ageDays > 0) { score += 5; reasons.push(`Domain sirf ${ageDays} days purana - Naya hai - Savdhaan`); }
+  else { reasons.push('Domain age nahi mili'); }
+  if (country !== 'Unknown') { score += 20; reasons.push(`Server Country: ${country}`); }
+  if (registrar !== 'Unknown') reasons.push(`Registrar: ${registrar}`);
+  score = Math.max(0, Math.min(100, score));
+  const label = score >= 70 ? 'SAFE' : score >= 40 ? 'CAUTION' : 'DANGER';
+  const out = { domain, company: domain.split('.')[0], ssl, issuer, created, ageDays, country, ip: ip || 'Unknown', registrar, score, label, reasons, isReal: true, source: 'crt.sh + RDAP + DNS + ip-api - 100% Real' };
+  cache.set(`c-${domain}`, out);
+  return out;
 }
 
 export async function searchJobsWorldwide(query: string) {
+  if (cache.has(`j-${query}`)) return cache.get(`j-${query}`);
   const results: any[] = [];
-  try {
-    const r = await fetch(`https://remotive.com/api/remote-jobs?search=${encodeURIComponent(query)}&limit=20`).then(r => r.json());
-    (r.jobs || []).forEach((j: any) => results.push({ title: j.title, company: j.company_name, location: j.candidate_required_location || 'Worldwide', url: j.url, type: j.job_type || 'Full-time', source: 'Remotive - Real', posted: j.publication_date, salary: j.salary || 'Not Disclosed', isReal: true }));
-  } catch {}
-  try {
-    const r = await fetch(`https://www.arbeitnow.com/api/job-board-api`).then(r => r.json());
-    (r.data || []).filter((j: any) => (j.title + j.company_name).toLowerCase().includes(query.toLowerCase())).slice(0, 20).forEach((j: any) => results.push({ title: j.title, company: j.company_name, location: j.location || 'Worldwide', url: j.url, type: j.job_types?.join(', ') || 'Full-time', source: 'Arbeitnow - Real', posted: j.created_at, salary: 'Not Disclosed', isReal: true }));
-  } catch {}
+  const [r1, r2] = await Promise.allSettled([
+    fetchTimeout(`https://remotive.com/api/remote-jobs?search=${encodeURIComponent(query)}&limit=20`, 6000).then(r => r.json()),
+    fetchTimeout(`https://www.arbeitnow.com/api/job-board-api`, 6000).then(r => r.json()),
+  ]);
+  if (r1.status === 'fulfilled') (r1.value.jobs || []).forEach((j: any) => results.push({ title: j.title, company: j.company_name, location: j.candidate_required_location || 'Worldwide', url: j.url, type: j.job_type || 'Full-time', source: 'Remotive - Real', posted: j.publication_date, salary: j.salary || 'Not Disclosed', isReal: true }));
+  if (r2.status === 'fulfilled') (r2.value.data || []).filter((j: any) => (j.title + j.company_name).toLowerCase().includes(query.toLowerCase())).slice(0, 20).forEach((j: any) => results.push({ title: j.title, company: j.company_name, location: j.location || 'Worldwide', url: j.url, type: j.job_types?.join(', ') || 'Full-time', source: 'Arbeitnow - Real', posted: j.created_at, salary: 'Not Disclosed', isReal: true }));
+  cache.set(`j-${query}`, results);
   return results;
 }
 
 export async function checkLinkReal(link: string) {
   const domain = cleanDomain(link);
   const company = await verifyCompanyReal(domain);
-  const isFake = !company.ssl && (company.ageDays !== null && company.ageDays < 90);
-  return { ...company, link, isSafe: !isFake, verdict: company.score >= 75 ? 'SAFE - Real Company' : company.score >= 40 ? 'SUSPICIOUS' : 'UNSAFE / FAKE', isReal: true };
+  const isFake = !company.ssl && company.ageDays < 90;
+  return { ...company, link, isSafe: !isFake, verdict: company.score >= 70 ? 'SAFE - Real Company' : company.score >= 40 ? 'SUSPICIOUS' : 'UNSAFE / FAKE', isReal: true };
 }
 
 export async function checkFakeJobReal(jobTitle: string, companyName: string) {
@@ -63,7 +83,7 @@ export async function checkFakeJobReal(jobTitle: string, companyName: string) {
   const foundInRealAPI = jobs.some((j: any) => j.company.toLowerCase().includes(companyName.toLowerCase()));
   const redFlags: string[] = [];
   if (!company.ssl) redFlags.push('Company ka SSL valid nahi hai');
-  if (company.ageDays !== null && company.ageDays < 180) redFlags.push(`Domain sirf ${company.ageDays} din purana hai`);
+  if (company.ageDays < 180) redFlags.push(`Domain sirf ${company.ageDays} din purana hai`);
   if (!foundInRealAPI) redFlags.push('Ye job real job boards me nahi mili');
   if (jobTitle.toLowerCase().includes('telegram') || jobTitle.toLowerCase().includes('whatsapp only')) redFlags.push('Telegram/WhatsApp only job = 99% Fake');
   const isFake = redFlags.length >= 2 || company.score < 40;
