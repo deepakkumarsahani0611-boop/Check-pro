@@ -1,5 +1,14 @@
+// src/components/RiskCheck.tsx - 100% REAL, NO MOCKDATA
 import { Globe, Mail, DollarSign, Copy, MessageCircle, CheckCircle2, XCircle, AlertTriangle } from 'lucide-react';
-import type { RiskCheck as RiskCheckType } from '@/data/mockData';
+
+// REAL type - Khud ka type, mockData se nahi liya
+export type RealCheck = {
+  id: string;
+  label: string;
+  detail: string;
+  status: 'pass' | 'fail' | 'warning';
+  icon?: string;
+};
 
 const iconMap: Record<string, typeof Globe> = {
   Globe,
@@ -9,14 +18,14 @@ const iconMap: Record<string, typeof Globe> = {
   MessageCircle,
 };
 
-export default function RiskCheck({ check }: { check: RiskCheckType }) {
-  const Icon = iconMap[check.icon] || Globe;
+export default function RiskCheck({ check }: { check: RealCheck }) {
+  const Icon = iconMap[check.icon || 'Globe'] || Globe;
   const statusConfig = {
     pass: { icon: CheckCircle2, color: 'text-emerald-400', bg: 'bg-emerald-500/5', border: 'border-emerald-500/15' },
     fail: { icon: XCircle, color: 'text-red-400', bg: 'bg-red-500/5', border: 'border-red-500/15' },
     warning: { icon: AlertTriangle, color: 'text-amber-400', bg: 'bg-amber-500/5', border: 'border-amber-500/15' },
   };
-  const config = statusConfig[check.status];
+  const config = statusConfig[check.status] || statusConfig.warning;
   const StatusIcon = config.icon;
 
   return (
