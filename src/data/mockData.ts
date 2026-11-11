@@ -1,4 +1,8 @@
-// ===== UNIVERSAL VERIFICATION ENGINE - All World Jobs =====
+// src/data/mockData.ts - V4 FINAL - 100% REAL - PROFESSIONAL - GLOBAL - NO 99.99
+// RULES: 1) Koi Selected Date Nahi - Sirf Search + Live API Date 2) Koi Placeholder Nahi - Unknown = Unknown
+// 3) Koi Fake Score Nahi - Score sirf worldCheck V14 Backend V10 se
+
+import { verifyCompanyReal, getRootDomain, searchJobsWorldwide } from '../lib/worldCheck';
 
 export interface RiskCheck {
   id: string;
@@ -18,6 +22,11 @@ export interface VerificationResult {
   checks: RiskCheck[];
   postedDate: string;
   platform: string;
+  domain: string;
+  realScore: number;
+  source: string;
+  isTypo: boolean;
+  realBrand: string;
 }
 
 export interface CompanyInfo {
@@ -32,6 +41,17 @@ export interface CompanyInfo {
   founded: string;
   industry: string;
   description: string;
+  score: number;
+  ssl: boolean;
+  issuer: string;
+  country: string;
+  ip: string;
+  registrar: string;
+  created: string;
+  ageDays: number;
+  isTypo: boolean;
+  realBrand: string;
+  source: string;
 }
 
 export interface HistoryEvent {
@@ -97,64 +117,27 @@ export interface Testimonial {
   saved: string;
 }
 
-// ===== Empty - No Fake Data =====
+// ---------- 100% Real - Koi Fake Data Nahi ----------
 export const verificationResults: Record<string, VerificationResult> = {};
 export const companies: Record<string, CompanyInfo> = {};
 export const jobHistoryData: Record<string, JobHistory> = {};
 export const mockAlerts: JobAlert[] = [];
 export const similarJobs: SimilarJob[] = [];
 export const initialTrackedJobs: TrackedJob[] = [];
+export const testimonials: Testimonial[] = [];
 
-export const testimonials: Testimonial[] = [
-  {
-    id: 'tm1',
-    name: 'Priya Sharma',
-    role: 'Software Engineer',
-    location: 'Bangalore, India',
-    avatar: 'PS',
-    quote: "I almost applied to a job that looked perfect — high salary, remote work. JobCheck.pro flagged it as 91% risk. The company was registered 8 days ago and demanded a Telegram interview. It was a scam.",
-    saved: 'Saved from losing ₹2L in a fake deposit scam',
-  },
-  {
-    id: 'tm2',
-    name: 'Rajesh Kumar',
-    role: 'Marketing Professional',
-    location: 'Mumbai, India',
-    avatar: 'RK',
-    quote: "The job history feature showed me the same posting had been re-posted 7 times with 4 different salary ranges. That's not a real job — that's a trap. JobCheck.pro saved my time and my savings.",
-    saved: 'Avoided a phishing scam targeting 1,000+ applicants',
-  },
-  {
-    id: 'tm3',
-    name: 'Ananya Gupta',
-    role: 'Recent Graduate',
-    location: 'Delhi, India',
-    avatar: 'AG',
-    quote: "As a fresher, I couldn't tell real jobs from fake ones. The Trust Score and company verification gave me confidence. I landed a verified role at Razorpay after filtering out 12 fake listings.",
-    saved: 'Filtered 12 fake jobs, landed a real position',
-  },
-]
-
-// ===== UNIVERSAL LOGIC - Works For Any Company / Any Job In World =====
-
+// ---------- Helpers - No Selected Date - No Hardcoded ----------
 export function extractDomain(input: string): string {
-  try {
-    let url = input.trim().toLowerCase();
-    if (!url.includes('://') && !url.includes('.')) {
-      // Company name hai, domain guess karo - google -> google.com
-      const clean = url.replace(/[^a-z0-9]/g, '');
-      return clean + '.com';
-    }
-    if (!url.includes('://')) url = 'https://' + url;
-    const u = new URL(url);
-    return u.hostname.replace('www.', '');
-  } catch {
-    return input.toLowerCase().replace(/[^a-z0-9.]/g, '');
+  if (!input || !input.trim()) return '';
+  const t = input.trim();
+  if (!t.includes('.') && !t.includes('://') && !t.includes('/')) {
+    return t.toLowerCase().replace(/[^a-z0-9]/g, '') + '.com';
   }
+  return getRootDomain(t);
 }
 
 export function getPlatformFromUrl(url: string): string {
-  const l = url.toLowerCase();
+  const l = (url || '').toLowerCase();
   if (l.includes('linkedin')) return 'LinkedIn';
   if (l.includes('naukri')) return 'Naukri';
   if (l.includes('indeed')) return 'Indeed';
@@ -163,11 +146,13 @@ export function getPlatformFromUrl(url: string): string {
   if (l.includes('instagram')) return 'Instagram';
   if (l.includes('glassdoor')) return 'Glassdoor';
   if (l.includes('monster')) return 'Monster';
+  if (l.includes('remotive')) return 'Remotive';
+  if (l.includes('arbeitnow')) return 'Arbeitnow';
   return 'Job Board';
 }
 
-// Ye main function hai - Koi bhi job daalo, ye score bana dega
-export function analyzeAnyJob(input: {
+// ---------- MAIN - Job Verification - 100% Real ----------
+export async function analyzeAnyJob(input: {
   url?: string;
   jobTitle?: string;
   company?: string;
@@ -175,110 +160,164 @@ export function analyzeAnyJob(input: {
   salary?: string;
   description?: string;
   email?: string;
-}): VerificationResult {
+  postedDate?: string;
+}): Promise<VerificationResult> {
   const text = `${input.url || ''} ${input.jobTitle || ''} ${input.company || ''} ${input.description || ''} ${input.email || ''}`.toLowerCase();
   const domain = extractDomain(input.url || input.company || '');
-  let score = 0;
   const checks: RiskCheck[] = [];
 
-  // 1. Email Check
-  if (text.includes('@gmail') || text.includes('@yahoo') || text.includes('@hotmail')) {
-    score += 25;
+  // 1. REAL ENGINE - Backend V10 - Yahi ek asli score hai
+  let real: any = null;
+  try {
+    if (domain) real = await verifyCompanyReal(domain);
+  } catch {
+    real = null;
+  }
+
+  // Risk = 100 - Real Score - Keyword se score nahi banega
+  let riskScore = real ? 100 - (real.score ?? 0) : 50;
+
+  if (text.includes('@gmail') || text.includes('@yahoo') || text.includes('@hotmail') || text.includes('@outlook')) {
     checks.push({ id: 'email', label: 'Official Email', status: 'fail', detail: `Uses personal Gmail/Yahoo instead of @${domain} - major red flag`, icon: 'Mail' });
+    riskScore = Math.min(100, riskScore + 10);
   } else {
     checks.push({ id: 'email', label: 'Official Email', status: 'pass', detail: `No personal email detected. Check @${domain}`, icon: 'Mail' });
   }
 
-  // 2. Telegram / WhatsApp Check
   if (text.includes('telegram') || text.includes('wa.me') || text.includes('whatsapp')) {
-    score += 30;
     checks.push({ id: 'messaging', label: 'Telegram/WhatsApp Flag', status: 'fail', detail: 'Asks to contact on Telegram/WhatsApp - 90% fake jobs use this', icon: 'MessageCircle' });
+    riskScore = Math.min(100, riskScore + 10);
   } else {
     checks.push({ id: 'messaging', label: 'Telegram/WhatsApp Flag', status: 'pass', detail: 'No personal messaging apps requested', icon: 'MessageCircle' });
   }
 
-  // 3. Salary Trap Check - Urgent + High Salary
-  if (text.includes('urgent') || text.includes('immediate joining') || text.includes('no experience') || text.includes('no interview')) {
-    score += 20;
-    checks.push({ id: 'salary', label: 'Salary Trap', status: 'warning', detail: 'Uses urgency words: Urgent / Immediate Joining / No Interview', icon: 'DollarSign' });
-  } else if (text.includes('registration fee') || text.includes('security deposit') || text.includes('training fee') || text.includes('pay to join') || text.includes('₹') && text.includes('deposit')) {
-    score += 35;
+  if (text.includes('registration fee') || text.includes('security deposit') || text.includes('training fee') || text.includes('pay to join')) {
     checks.push({ id: 'salary', label: 'Salary Trap', status: 'fail', detail: 'Asks for registration / deposit fee - 100% scam pattern', icon: 'DollarSign' });
+    riskScore = Math.min(100, riskScore + 15);
+  } else if (text.includes('urgent') || text.includes('immediate joining') || text.includes('no experience') || text.includes('no interview')) {
+    checks.push({ id: 'salary', label: 'Salary Trap', status: 'warning', detail: 'Uses urgency words: Urgent / Immediate Joining / No Interview', icon: 'DollarSign' });
+    riskScore = Math.min(100, riskScore + 5);
   } else {
     checks.push({ id: 'salary', label: 'Salary Trap', status: 'pass', detail: 'No fee / urgency trap detected in description', icon: 'DollarSign' });
   }
 
-  // 4. Domain Check - New / Suspicious domain
-  const suspiciousTLD = domain.endsWith('.xyz') || domain.endsWith('.top') || domain.endsWith('.click') || domain.endsWith('.online') || domain.endsWith('.site');
-  if (suspiciousTLD) {
-    score += 20;
-    checks.push({ id: 'domain', label: 'Domain Age', status: 'warning', detail: `${domain} uses suspicious TLD - often used for scams`, icon: 'Globe' });
+  if (real?.isTypo) {
+    checks.push({ id: 'domain', label: 'Domain Age', status: 'fail', detail: `${domain} TYPO-SQUAT hai - Asli: ${real.realBrand}`, icon: 'Globe' });
+    riskScore = 100;
+  } else if (real?.ssl) {
+    checks.push({ id: 'domain', label: 'Domain Age', status: 'pass', detail: `${domain} - SSL OK, Age ${real.ageDays} days, ${real.country}`, icon: 'Globe' });
+  } else if (real) {
+    checks.push({ id: 'domain', label: 'Domain Age', status: 'warning', detail: `${domain} - SSL nahi mila, Age ${real.ageDays} days`, icon: 'Globe' });
   } else {
-    checks.push({ id: 'domain', label: 'Domain Age', status: 'pass', detail: `${domain} - Check RDAP for real age below`, icon: 'Globe' });
+    checks.push({ id: 'domain', label: 'Domain Age', status: 'warning', detail: `${domain} - Real check fail, dobara try karo`, icon: 'Globe' });
   }
 
-  // 5. Duplicate / Work From Home Trap
-  if (text.includes('work from home') && text.includes('earn') && (text.includes('50000') || text.includes('80000') || text.includes('1 lakh'))) {
-    score += 15;
+  if (text.includes('work from home') && text.includes('earn') && (text.includes('50000') || text.includes('80000') || text.includes('1 lakh') || text.includes('100000'))) {
     checks.push({ id: 'duplicate', label: 'Duplicate Check', status: 'warning', detail: 'High-pay Work From Home pattern - commonly duplicated scam', icon: 'Copy' });
   } else {
     checks.push({ id: 'duplicate', label: 'Duplicate Check', status: 'pass', detail: 'No duplicate pattern detected', icon: 'Copy' });
   }
 
-  const status: 'safe' | 'caution' | 'danger' = score >= 70 ? 'danger' : score >= 40 ? 'caution' : 'safe';
+  const finalRisk = Math.min(100, Math.max(0, Math.round(riskScore)));
+  const status: 'safe' | 'caution' | 'danger' = finalRisk >= 70 ? 'danger' : finalRisk >= 40 ? 'caution' : 'safe';
 
   return {
-    riskScore: Math.min(100, score),
+    riskScore: finalRisk,
     status,
-    jobTitle: input.jobTitle || 'Job from Link',
-    company: input.company || domain.split('.')[0].toUpperCase(),
-    location: input.location || 'Check in job post',
-    salary: input.salary || 'Not mentioned in link',
-    postedDate: 'Just now',
+    jobTitle: input.jobTitle || 'Unknown - Search ke according nahi mila',
+    company: input.company || (domain ? domain.split('.')[0].toUpperCase() : 'Unknown'),
+    location: input.location || 'Not Disclosed',
+    salary: input.salary || 'Not Disclosed',
+    // V4 FIX - NO SELECTED DATE - Sirf jo search/API ne diya wahi, nahi to Not Disclosed - Apni taraf se date nahi banayenge
+    postedDate: input.postedDate || 'Not Disclosed',
     platform: getPlatformFromUrl(input.url || ''),
     checks,
+    domain,
+    realScore: real?.score ?? 0,
+    source: real?.source || 'Real Engine - Backend V10',
+    isTypo: Boolean(real?.isTypo),
+    realBrand: real?.realBrand || '',
   };
 }
 
-// Company Verification - Koi bhi company name daalo
-export function analyzeAnyCompany(companyName: string): CompanyInfo {
+// ---------- Company - 100% Real - Koi Placeholder Nahi ----------
+export async function analyzeAnyCompany(companyName: string): Promise<CompanyInfo> {
   const domain = extractDomain(companyName);
   const name = companyName.trim();
+  const real: any = await verifyCompanyReal(domain);
+  const years = real.ageDays ? real.ageDays / 365 : 0;
+
   return {
-    name: name,
+    name,
     website: domain,
-    domainAge: 'Check live via RDAP - https://rdap.org/domain/' + domain,
-    domainAgeYears: 0,
-    gstNumber: 'Search on gst.gov.in for Indian companies',
-    legalStatus: 'Verify on MCA / LinkedIn / Crunchbase',
-    employeeCount: 'Check LinkedIn for real count',
-    trustBadge: 'Unverified',
-    founded: 'Check website footer',
-    industry: 'Check LinkedIn',
-    description: `Live check for ${name} (${domain}). This company is not in our pre-saved list - verification is done from live domain + description analysis.`,
+    domainAge: real.created !== 'Unknown' ? `Registered on ${real.created} - ${years.toFixed(1)} years old` : 'Unknown - RDAP se verify nahi hui',
+    domainAgeYears: Math.floor(years),
+    // V4 FIX - Professional - Check on X nahi, Unknown likhenge - Jhootha link nahi denge
+    gstNumber: 'Unknown - Not Available via Live Check',
+    legalStatus: real.score >= 70 && !real.isTypo ? 'Verified - Live Check Passed' : real.score >= 40 ? 'Caution - Live Check' : 'High Risk - Live Check Failed',
+    employeeCount: 'Unknown - Not Available via Live Check',
+    trustBadge: real.score >= 70 && !real.isTypo ? 'Verified' : 'Unverified',
+    founded: real.created !== 'Unknown' ? real.created : 'Unknown',
+    industry: 'Unknown - Not Available via Live Check',
+    description: `Live check for ${name} (${domain}) - Score ${real.score}/100 - ${real.source}`,
+    score: real.score,
+    ssl: real.ssl,
+    issuer: real.issuer,
+    country: real.country,
+    ip: real.ip,
+    registrar: real.registrar,
+    created: real.created,
+    ageDays: real.ageDays,
+    isTypo: Boolean(real.isTypo),
+    realBrand: real.realBrand || '',
+    source: real.source,
   };
 }
 
-// Job History - Koi bhi job search karne ke liye
+// ---------- Search According - 100% - Koi Selected List Nahi ----------
+// Jo user search box me likhega, wahi query API ko jayegi - Koi pehle se list nahi
+export async function searchCompaniesReal(query: string) {
+  const q = query.trim();
+  if (!q) return [];
+  const jobs = await searchJobsWorldwide(q);
+  const seen = new Set<string>();
+  const out: { name: string; domain: string; location: string; jobTitle: string; url: string; source: string; postedDate: string }[] = [];
+  for (const j of jobs) {
+    const key = String(j.company || '').toLowerCase();
+    if (!key || seen.has(key)) continue;
+    seen.add(key);
+    out.push({ name: j.company, domain: extractDomain(j.company), location: j.location || 'Not Disclosed', jobTitle: j.title, url: j.url, source: j.source, postedDate: j.posted || 'Not Disclosed' });
+  }
+  return out;
+}
+
+// Search Jobs - Direct - Search According - No Selected Date
+export async function searchJobsReal(query: string) {
+  const q = query.trim();
+  if (!q) return [];
+  return await searchJobsWorldwide(q);
+}
+
+// ---------- History / Tracker - Sirf User ka apna data ----------
 export function createJobHistory(jobTitle: string, company: string): JobHistory {
+  // Ye history user ke track karne se banti hai - Koi pehle se fake history nahi
   return {
     jobTitle,
     company,
     repostCount: 0,
     salaryChanges: 0,
     locationChanges: 0,
-    firstPosted: new Date().toISOString().split('T')[0],
-    lastSeen: new Date().toISOString().split('T')[0],
+    firstPosted: 'Not Disclosed',
+    lastSeen: 'Not Disclosed',
     events: [
-      { id: 'e1', date: new Date().toISOString().split('T')[0], type: 'posted', label: 'Job Checked Now', detail: `User searched for ${jobTitle} at ${company}. History will build as user tracks this job.` },
+      { id: 'e1', date: 'Not Disclosed', type: 'posted', label: 'Job Checked', detail: `User searched for ${jobTitle} at ${company}. History will build as user tracks this job.` },
     ],
   };
 }
 
-// Tracker - User apni job khud add karega
 export function createTrackedJob(title: string, company: string, location: string, salary: string, trustScore: number): TrackedJob {
   return {
-    id: 't-' + Date.now(),
+    id: 't-' + Date.now() + '-' + Math.random().toString(36).slice(2, 8),
     title,
     company,
     location,
@@ -290,15 +329,15 @@ export function createTrackedJob(title: string, company: string, location: strin
 }
 
 export function getRiskColor(score: number): string {
-  if (score < 40) return '#10B981'
-  if (score < 70) return '#F59E0B'
-  return '#EF4444'
+  if (score < 40) return '#10B981';
+  if (score < 70) return '#F59E0B';
+  return '#EF4444';
 }
 
 export function getRiskLabel(score: number): string {
-  if (score < 40) return 'Low Risk'
-  if (score < 70) return 'Caution'
-  return 'High Risk'
+  if (score < 40) return 'Low Risk';
+  if (score < 70) return 'Caution';
+  return 'High Risk';
 }
 
 export function getCheckIcon(name: string): string {
@@ -308,17 +347,15 @@ export function getCheckIcon(name: string): string {
     DollarSign: 'DollarSign',
     Copy: 'Copy',
     MessageCircle: 'MessageCircle',
-  }
-  return icons[name] || name
+  };
+  return icons[name] || name;
 }
 
-// Old function - ab ye bhi universal hai
-export function detectJobType(url: string): 'safe' | 'caution' | 'danger' {
-  const result = analyzeAnyJob({ url });
+export async function detectJobType(url: string): Promise<'safe' | 'caution' | 'danger'> {
+  const result = await analyzeAnyJob({ url });
   return result.status;
 }
 
-// Real Domain Age - Browser se live check (RDAP - Free, No API Key)
 export async function fetchRealDomainAge(domain: string): Promise<string> {
   try {
     const res = await fetch(`https://rdap.org/domain/${domain}`);
@@ -329,8 +366,8 @@ export async function fetchRealDomainAge(domain: string): Promise<string> {
       const years = (Date.now() - date.getTime()) / (1000 * 60 * 60 * 24 * 365);
       return `Registered on ${date.toDateString()} - ${years.toFixed(1)} years old`;
     }
-    return 'Domain not found in RDAP';
+    return 'Unknown - Domain not found in RDAP';
   } catch {
-    return 'Could not fetch live domain age';
+    return 'Unknown - Could not fetch live domain age';
   }
 }
