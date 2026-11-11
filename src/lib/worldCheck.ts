@@ -1,5 +1,6 @@
-// src/lib/worldCheck.ts - V14 FINAL - 100% REAL - 100% CHECKED - NO 99.99
+// src/lib/worldCheck.ts - V15 GLOBAL - 100% REAL - 100% CHECKED - ENGLISH ONLY
 // FIXED: Cache TTL 5 min + 100+ Brands + No Selected Date + Search According
+// CHANGE V14 -> V15: All user-facing strings converted to Global English. No Hinglish. No GST. No INR.
 
 const BRANDS: Record<string, string> = {
   google: "google.com", microsoft: "microsoft.com", amazon: "amazon.com",
@@ -12,7 +13,6 @@ const BRANDS: Record<string, string> = {
   netflix: "netflix.com", adobe: "adobe.com", oracle: "oracle.com", ibm: "ibm.com",
   dell: "dell.com", hp: "hp.com", lenovo: "lenovo.com", whatsapp: "whatsapp.com",
   telegram: "telegram.org", youtube: "youtube.com", linkedin: "linkedin.com", twitter: "x.com",
-  // V14 NEW - 100+ Brands - Indian + Global - Pehle chhoot rahe the
   tata: "tata.com", mahindra: "mahindra.com", bajaj: "bajajfinserv.in", adani: "adani.com",
   jio: "jio.com", airtel: "airtel.in", vodafone: "vi.com", idea: "vi.com",
   hdfclife: "hdfclife.com", icicipru: "iciciprulife.com", lic: "licindia.in",
@@ -85,15 +85,14 @@ export function checkTypo(domain: string) {
     if (Math.abs(name.length - b.length) > 1) continue;
     const dist = lev(name, b);
     if (dist === 1) {
-      return { isTypo: true, realBrand: BRANDS[b], fakeDomain: root, message: `TYPO-SQUAT! Ye ${BRANDS[b]} ka nakli version hai - ${root} FAKE hai!` };
+      return { isTypo: true, realBrand: BRANDS[b], fakeDomain: root, message: `TYPO-SQUAT! This is a fake version of ${BRANDS[b]} - ${root} is FAKE!` };
     }
   }
   return null;
 }
 
-// V14 FIX - Cache TTL - 5 min baad purana data khatam - Hamesha FRESH + LIVE
 const cache = new Map<string, {data:any, time:number}>();
-const CACHE_TTL = 5 * 60 * 1000; // 5 min - Na 0 min (slow), Na infinite (purana)
+const CACHE_TTL = 5 * 60 * 1000;
 const getCache = (k:string) => {
   const v = cache.get(k);
   if (!v) return null;
@@ -117,7 +116,7 @@ export async function verifyCompanyReal(input: string) {
 
   const typo = checkTypo(domain);
   if (typo) {
-    const out = { domain, company: domain.split(".")[0], ssl: false, issuer: "Unknown", created: "Unknown", ageDays: 0, country: "Unknown", ip: "Unknown", registrar: "Unknown", score: 0, label: "DANGER", reasons: [typo.message, "Typo-squat domain - Kabhi paise / OTP / Password mat bhejo", `Asli site: ${typo.realBrand} - Wahi kholo`], isReal: true, isTypo: true, realBrand: typo.realBrand, source: "Typo Engine - 100% Local Check" };
+    const out = { domain, company: domain.split(".")[0], ssl: false, issuer: "Unknown", created: "Unknown", ageDays: 0, country: "Unknown", ip: "Unknown", registrar: "Unknown", score: 0, label: "DANGER", reasons: [typo.message, "Typo-squat domain - Never send money / OTP / Password", `Official site: ${typo.realBrand} - Open only that`], isReal: true, isTypo: true, realBrand: typo.realBrand, source: "Typo Engine - 100% Local Check" };
     setCache(`c-${domain}`, out);
     return out;
   }
@@ -135,7 +134,7 @@ export async function verifyCompanyReal(input: string) {
       created: res.created || "Unknown", ageDays: Number(res.ageDays) || 0,
       country: res.country || "Unknown", ip: res.ip || "Unknown", registrar: res.registrar || "Unknown",
       score, label: score >= 70 ? "SAFE" : score >= 40 ? "CAUTION" : "DANGER",
-      reasons: Array.isArray(res.reasons) && res.reasons.length > 0 ? res.reasons : ["Backend se verified data"],
+      reasons: Array.isArray(res.reasons) && res.reasons.length > 0 ? res.reasons : ["Verified data from backend"],
       isReal: true, source: res.source || "Backend V10 - 20 Verified API"
     };
     setCache(`c-${domain}`, out);
@@ -164,13 +163,13 @@ export async function verifyCompanyReal(input: string) {
       }
     }
     let score = 0; const reasons: string[] = [];
-    if (ssl) { score+=40; reasons.push("SSL Certificate Mila - crt.sh Verified"); } else { reasons.push("SSL Certificate Nahi Mila - Fallback Check"); score+=10; }
-    if (ageDays > 3650) { score+=40; reasons.push(`Domain ${ageDays} days purana - Highly Trusted`); }
-    else if (ageDays > 1000) { score+=30; reasons.push(`Domain ${ageDays} days purana`); }
-    else if (ageDays > 180) { score+=20; reasons.push(`Domain ${ageDays} days purana`); }
-    else if (ageDays > 0) { score+=5; reasons.push(`Domain sirf ${ageDays} days purana - Naya hai - Savdhaan`); }
-    else { reasons.push("Domain age nahi mili - RDAP se verify nahi hui"); }
-    if (country!=="Unknown") { score+=20; reasons.push(`Server Country: ${country}`); } else { reasons.push("Server Country: Unknown - IP se location nahi mili"); }
+    if (ssl) { score+=40; reasons.push("SSL Certificate Found - Verified via crt.sh"); } else { reasons.push("SSL Certificate Not Found - Fallback Check"); score+=10; }
+    if (ageDays > 3650) { score+=40; reasons.push(`Domain is ${ageDays} days old - Highly Trusted`); }
+    else if (ageDays > 1000) { score+=30; reasons.push(`Domain is ${ageDays} days old`); }
+    else if (ageDays > 180) { score+=20; reasons.push(`Domain is ${ageDays} days old`); }
+    else if (ageDays > 0) { score+=5; reasons.push(`Domain is only ${ageDays} days old - Very new - Be cautious`); }
+    else { reasons.push("Domain age not found - Could not verify via RDAP"); }
+    if (country!=="Unknown") { score+=20; reasons.push(`Server Country: ${country}`); } else { reasons.push("Server Country: Unknown - Location not found via IP"); }
     if (registrar!=="Unknown") reasons.push(`Registrar: ${registrar}`);
     score = Math.max(0, Math.min(100, score));
     const label = score>=70 ? "SAFE" : score>=40 ? "CAUTION" : "DANGER";
@@ -213,10 +212,10 @@ export async function checkFakeJobReal(jobTitle: string, companyName: string) {
   const jobs = await searchJobsWorldwide(jobTitle);
   const foundInRealAPI = jobs.some((j:any)=>j.company.toLowerCase().includes(cleanName.split(" ")[0]));
   const redFlags: string[] = [];
-  if (company.isTypo) redFlags.push(`TYPO-SQUAT! Asli: ${company.realBrand}`);
-  if (!company.ssl) redFlags.push("Company ka SSL valid nahi hai");
-  if (company.ageDays > 0 && company.ageDays < 180) redFlags.push(`Domain sirf ${company.ageDays} din purana hai`);
-  if (!foundInRealAPI) redFlags.push("Ye job real job boards me nahi mili");
+  if (company.isTypo) redFlags.push(`TYPO-SQUAT! Official: ${company.realBrand}`);
+  if (!company.ssl) redFlags.push("Company SSL is not valid");
+  if (company.ageDays > 0 && company.ageDays < 180) redFlags.push(`Domain is only ${company.ageDays} days old`);
+  if (!foundInRealAPI) redFlags.push("This job was not found on real job boards");
   if (jobTitle.toLowerCase().includes("telegram") || jobTitle.toLowerCase().includes("whatsapp only")) redFlags.push("Telegram/WhatsApp only job = 99% Fake");
   const isFake = redFlags.length>=2 || company.score<40 || Boolean(company.isTypo);
   return { jobTitle, company: companyName, companyCheck: company, foundInRealAPI, redFlags, verdict: isFake ? "FAKE / HIGH RISK" : redFlags.length===1 ? "SUSPICIOUS" : "LIKELY REAL", score: company.score, isReal: true };
