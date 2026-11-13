@@ -1,6 +1,5 @@
-// src/lib/worldCheck.ts - V15 GLOBAL - 100% REAL - 100% CHECKED - ENGLISH ONLY
-// FIXED: Cache TTL 5 min + 100+ Brands + No Selected Date + Search According
-// CHANGE V14 -> V15: All user-facing strings converted to Global English. No Hinglish. No GST. No INR.
+// src/lib/worldCheck.ts - V19 FINAL - 100% REAL - NO DUMMY - NO SELECTED DATA
+// RULE: If API gives no data -> null / Unknown. Never invent. Unknown != Fake. Fake only on proof. Low score != Fake.
 
 const BRANDS: Record<string, string> = {
   google: "google.com", microsoft: "microsoft.com", amazon: "amazon.com",
@@ -34,6 +33,7 @@ const BRANDS: Record<string, string> = {
   idfc: "idfcfirstbank.com", federal: "federalbank.co.in", indusind: "indusind.com",
   dbs: "dbs.com", hsbc: "hsbc.co.in", citi: "citibank.co.in", standard: "sc.com",
 };
+// NOTE: BRANDS is ONLY for typo reference. NOT a whitelist. Domain NOT in list = Verified via live API, NOT Fake.
 
 const DOUBLE_SUFFIX = new Set(["co.uk","co.in","com.au","com.br","co.jp","co.kr","com.mx","com.sg","org.uk","ac.in","gov.in","co.za","com.tr","com.pl","com.ar"]);
 export const getRootDomain = (input: string): string => {
@@ -116,7 +116,7 @@ export async function verifyCompanyReal(input: string) {
 
   const typo = checkTypo(domain);
   if (typo) {
-    const out = { domain, company: domain.split(".")[0], ssl: false, issuer: "Unknown", created: "Unknown", ageDays: 0, country: "Unknown", ip: "Unknown", registrar: "Unknown", score: 0, label: "DANGER", reasons: [typo.message, "Typo-squat domain - Never send money / OTP / Password", `Official site: ${typo.realBrand} - Open only that`], isReal: true, isTypo: true, realBrand: typo.realBrand, source: "Typo Engine - 100% Local Check" };
+    const out = { domain, company: domain.split(".")[0], ssl: false, issuer: "Unknown", created: null, ageDays: null, country: "Unknown", ip: "Unknown", registrar: "Unknown", score: 0, label: "DANGER", reasons: [typo.message, "Typo-squat domain - Never send money / OTP / Password", `Official site: ${typo.realBrand} - Open only that`], isReal: true, isTypo: true, realBrand: typo.realBrand, source: "Typo Engine" };
     setCache(`c-${domain}`, out);
     return out;
   }
@@ -126,16 +126,43 @@ export async function verifyCompanyReal(input: string) {
       if (!r.ok) throw new Error(`Backend ${r.status}`);
       return r.json();
     });
-    if (typeof res.score !== "number" || res.score < 0 || res.score > 100) throw new Error("Invalid backend score");
-    const score = Math.round(res.score);
+    if (res.typo) {
+      const out = { domain, company: domain.split(".")[0], ssl: false, issuer: "Unknown", created: null, ageDays: null, country: "Unknown", ip: "Unknown", registrar: "Unknown", score: 0, label: "DANGER", reasons: [`TYPO-SQUAT! Fake version of ${res.typo}`], isReal: true, isTypo: true, realBrand: res.typo, source: "Backend V12" };
+      setCache(`c-${domain}`, out);
+      return out;
+    }
+
+    const ssl = res.ssl === true ? true : res.ssl === false ? false : null;
+    const created = res.created || null;
+    const ageDays = created ? Math.floor((Date.now() - new Date(created).getTime()) / 86400000) : null;
+
+    let score = 0; const reasons: string[] = [];
+    if (ssl === true) { score += 40; reasons.push(`SSL Certificate Valid - ${res.sslIssuer || "Unknown"}`); }
+    else if (ssl === false) { reasons.push("SSL Certificate Not Valid"); }
+    else { reasons.push("SSL Unknown - Could not verify"); }
+
+    if (ageDays !== null && ageDays > 3650) { score += 40; reasons.push(`Domain is ${ageDays} days old`); }
+    else if (ageDays !== null && ageDays > 1000) { score += 30; reasons.push(`Domain is ${ageDays} days old`); }
+    else if (ageDays !== null && ageDays > 180) { score += 20; reasons.push(`Domain is ${ageDays} days old`); }
+    else if (ageDays !== null && ageDays >= 0) { score += 5; reasons.push(`Domain is ${ageDays} days old`); }
+    else { reasons.push("Domain age Unknown - Could not verify via RDAP"); }
+
+    if (res.country) { score += 20; reasons.push(`Server Country: ${res.country}`); }
+    else { reasons.push("Server Country: Unknown"); }
+    if (res.registrar) reasons.push(`Registrar: ${res.registrar}`);
+
+    score = Math.max(0, Math.min(100, score));
+    const allUnknown = ssl === null && ageDays === null && !res.country;
+    // V19 FIX: Low score = UNKNOWN, NOT DANGER. DANGER only on typo proof.
+    const label = allUnknown ? "CAUTION" : score >= 70 ? "SAFE" : score >= 40 ? "CAUTION" : "UNKNOWN - Insufficient Data";
+
     const out = {
       domain, company: domain.split(".")[0],
-      ssl: Boolean(res.ssl), issuer: res.issuer || "Unknown",
-      created: res.created || "Unknown", ageDays: Number(res.ageDays) || 0,
+      ssl, issuer: res.sslIssuer || "Unknown",
+      created: created || "Unknown", ageDays,
       country: res.country || "Unknown", ip: res.ip || "Unknown", registrar: res.registrar || "Unknown",
-      score, label: score >= 70 ? "SAFE" : score >= 40 ? "CAUTION" : "DANGER",
-      reasons: Array.isArray(res.reasons) && res.reasons.length > 0 ? res.reasons : ["Verified data from backend"],
-      isReal: true, source: res.source || "Backend V10 - 20 Verified API"
+      score, label, reasons,
+      isReal: true, source: "Backend V12 - Live Verified"
     };
     setCache(`c-${domain}`, out);
     return out;
@@ -147,12 +174,12 @@ export async function verifyCompanyReal(input: string) {
     ]);
     const certs: any[] = sslRes.status==="fulfilled" && Array.isArray(sslRes.value) ? sslRes.value : [];
     const validCert = certs.filter((c:any)=>c.not_after && new Date(c.not_after) > new Date());
-    const ssl = validCert.length > 0;
+    const ssl = validCert.length > 0 ? true : (sslRes.status==="fulfilled" ? false : null);
     const issuer = validCert[0]?.issuer_name || "Unknown";
     const rdap: any = rdapRes.status==="fulfilled" ? rdapRes.value : null;
     const createdEv = rdap?.events?.find((e:any)=>e.eventAction==="registration");
-    const created = createdEv ? String(createdEv.eventDate).split("T")[0] : "Unknown";
-    const ageDays = created!=="Unknown" ? Math.floor((Date.now()-new Date(created).getTime())/86400000) : 0;
+    const created = createdEv ? String(createdEv.eventDate).split("T")[0] : null;
+    const ageDays = created ? Math.floor((Date.now()-new Date(created).getTime())/86400000) : null;
     const registrar = rdap?.entities?.[0]?.vcardArray?.[1]?.find((x:any)=>x[0]==="fn")?.[3] || "Unknown";
     const ip = dnsRes.status==="fulfilled" ? (dnsRes.value as any)?.Answer?.find((a:any)=>a.type===1)?.data : null;
     let country = "Unknown";
@@ -163,17 +190,20 @@ export async function verifyCompanyReal(input: string) {
       }
     }
     let score = 0; const reasons: string[] = [];
-    if (ssl) { score+=40; reasons.push("SSL Certificate Found - Verified via crt.sh"); } else { reasons.push("SSL Certificate Not Found - Fallback Check"); score+=10; }
-    if (ageDays > 3650) { score+=40; reasons.push(`Domain is ${ageDays} days old - Highly Trusted`); }
-    else if (ageDays > 1000) { score+=30; reasons.push(`Domain is ${ageDays} days old`); }
-    else if (ageDays > 180) { score+=20; reasons.push(`Domain is ${ageDays} days old`); }
-    else if (ageDays > 0) { score+=5; reasons.push(`Domain is only ${ageDays} days old - Very new - Be cautious`); }
-    else { reasons.push("Domain age not found - Could not verify via RDAP"); }
-    if (country!=="Unknown") { score+=20; reasons.push(`Server Country: ${country}`); } else { reasons.push("Server Country: Unknown - Location not found via IP"); }
+    if (ssl === true) { score+=40; reasons.push("SSL Certificate Found - Verified via crt.sh"); }
+    else if (ssl === false) { reasons.push("SSL Certificate Not Found - Fallback Check"); score+=10; }
+    else { reasons.push("SSL Unknown - Could not verify"); }
+    if (ageDays !== null && ageDays > 3650) { score+=40; reasons.push(`Domain is ${ageDays} days old`); }
+    else if (ageDays !== null && ageDays > 1000) { score+=30; reasons.push(`Domain is ${ageDays} days old`); }
+    else if (ageDays !== null && ageDays > 180) { score+=20; reasons.push(`Domain is ${ageDays} days old`); }
+    else if (ageDays !== null && ageDays >= 0) { score+=5; reasons.push(`Domain is ${ageDays} days old`); }
+    else { reasons.push("Domain age Unknown - Could not verify via RDAP"); }
+    if (country!=="Unknown") { score+=20; reasons.push(`Server Country: ${country}`); } else { reasons.push("Server Country: Unknown"); }
     if (registrar!=="Unknown") reasons.push(`Registrar: ${registrar}`);
     score = Math.max(0, Math.min(100, score));
-    const label = score>=70 ? "SAFE" : score>=40 ? "CAUTION" : "DANGER";
-    const out = { domain, company: domain.split(".")[0], ssl, issuer, created, ageDays, country, ip: ip||"Unknown", registrar, score, label, reasons, isReal: true, source: "Fallback - crt.sh + RDAP + DNS + ip-api - 100% Real" };
+    // V19 FIX: Low score = UNKNOWN, NOT DANGER.
+    const label = (ssl === null && ageDays === null && country === "Unknown") ? "CAUTION" : score>=70 ? "SAFE" : score>=40 ? "CAUTION" : "UNKNOWN - Insufficient Data";
+    const out = { domain, company: domain.split(".")[0], ssl, issuer, created: created || "Unknown", ageDays, country, ip: ip||"Unknown", registrar, score, label, reasons, isReal: true, source: "Fallback - crt.sh + RDAP + DNS + ip-api" };
     setCache(`c-${domain}`, out);
     return out;
   }
@@ -189,8 +219,8 @@ export async function searchJobsWorldwide(query: string) {
     fetchTimeout(`https://remotive.com/api/remote-jobs?search=${encodeURIComponent(q)}&limit=20`, 6000).then(r=>r.json()),
     fetchTimeout(`https://www.arbeitnow.com/api/job-board-api`, 6000).then(r=>r.json()),
   ]);
-  if (r1.status==="fulfilled") (r1.value.jobs||[]).forEach((j:any)=>results.push({title:j.title, company:j.company_name, location:j.candidate_required_location||"Worldwide", url:j.url, type:j.job_type||"Full-time", source:"Remotive - Real", posted:j.publication_date, salary:j.salary||"Not Disclosed", isReal:true}));
-  if (r2.status==="fulfilled") (r2.value.data||[]).filter((j:any)=>(j.title+" "+j.company_name+" "+(j.location||"")).toLowerCase().includes(q.toLowerCase())).slice(0,20).forEach((j:any)=>results.push({title:j.title, company:j.company_name, location:j.location||"Worldwide", url:j.url, type:j.job_types?.join(", ")||"Full-time", source:"Arbeitnow - Real", posted:j.created_at, salary:"Not Disclosed", isReal:true}));
+  if (r1.status==="fulfilled") (r1.value.jobs||[]).forEach((j:any)=>results.push({title:j.title, company:j.company_name, location:j.candidate_required_location || null, url:j.url, type:j.job_type || null, source:"Remotive", posted:j.publication_date, salary:j.salary || null, isReal:true}));
+  if (r2.status==="fulfilled") (r2.value.data||[]).filter((j:any)=>(j.title+" "+j.company_name+" "+(j.location||"")).toLowerCase().includes(q.toLowerCase())).slice(0,20).forEach((j:any)=>results.push({title:j.title, company:j.company_name, location:j.location || null, url:j.url, type:j.job_types?.join(", ") || null, source:"Arbeitnow", posted:j.created_at, salary: null, isReal:true}));
   results.sort((a:any,b:any)=> new Date(b.posted||0).getTime() - new Date(a.posted||0).getTime());
   setCache(`j-${q.toLowerCase()}`, results);
   return results;
@@ -199,24 +229,26 @@ export async function searchJobsWorldwide(query: string) {
 export async function checkLinkReal(link: string) {
   const domain = getRootDomain(cleanDomain(link));
   const company = await verifyCompanyReal(domain);
-  const isFake = !company.ssl && company.ageDays < 90;
-  return { ...company, link, isSafe: !isFake && !company.isTypo, verdict: company.isTypo ? "FAKE - TYPO-SQUAT" : company.score>=70 ? "SAFE - Real Company" : company.score>=40 ? "SUSPICIOUS" : "UNSAFE / FAKE", isReal: true };
+  const isFake = company.ssl === false && company.ageDays !== null && company.ageDays < 90;
+  return { ...company, link, isSafe: !isFake && !company.isTypo, verdict: company.isTypo ? "FAKE - TYPO-SQUAT" : company.score>=70 ? "SAFE - Real Company" : company.score>=40 ? "SUSPICIOUS" : "UNKNOWN - Insufficient Data", isReal: true };
 }
 
 export async function checkFakeJobReal(jobTitle: string, companyName: string) {
   const cleanName = companyName.trim().toLowerCase();
   const key = cleanName.replace(/[^a-z0-9]/g,"");
   const knownDomain = BRANDS[key] || BRANDS[cleanName.split(" ")[0]];
-  const domainGuess = knownDomain || `${key}.com`;
-  const company = await verifyCompanyReal(domainGuess);
   const jobs = await searchJobsWorldwide(jobTitle);
   const foundInRealAPI = jobs.some((j:any)=>j.company.toLowerCase().includes(cleanName.split(" ")[0]));
+  if (!knownDomain) {
+    return { jobTitle, company: companyName, companyCheck: null, foundInRealAPI, redFlags: ["Company domain Unknown - Cannot verify without official domain"], verdict: "UNKNOWN - Cannot Verify", score: null, isReal: true };
+  }
+  const company = await verifyCompanyReal(knownDomain);
   const redFlags: string[] = [];
   if (company.isTypo) redFlags.push(`TYPO-SQUAT! Official: ${company.realBrand}`);
-  if (!company.ssl) redFlags.push("Company SSL is not valid");
-  if (company.ageDays > 0 && company.ageDays < 180) redFlags.push(`Domain is only ${company.ageDays} days old`);
-  if (!foundInRealAPI) redFlags.push("This job was not found on real job boards");
-  if (jobTitle.toLowerCase().includes("telegram") || jobTitle.toLowerCase().includes("whatsapp only")) redFlags.push("Telegram/WhatsApp only job = 99% Fake");
-  const isFake = redFlags.length>=2 || company.score<40 || Boolean(company.isTypo);
-  return { jobTitle, company: companyName, companyCheck: company, foundInRealAPI, redFlags, verdict: isFake ? "FAKE / HIGH RISK" : redFlags.length===1 ? "SUSPICIOUS" : "LIKELY REAL", score: company.score, isReal: true };
-}
+  if (company.ssl === false) redFlags.push("Company SSL is not valid");
+  if (company.ssl === null) redFlags.push("Company SSL Unknown - Could not verify");
+  if (company.ageDays !== null && company.ageDays < 180) redFlags.push(`Domain is ${company.ageDays} days old`);
+  if (jobTitle.toLowerCase().includes("telegram") || jobTitle.toLowerCase().includes("whatsapp only")) redFlags.push("Telegram/WhatsApp only contact - High Risk Flag - No official website / email found");
+  const isFake = Boolean(company.isTypo) || (company.ssl === false && company.ageDays !== null && company.ageDays < 90);
+  return { jobTitle, company: companyName, companyCheck: company, foundInRealAPI, redFlags, verdict: isFake ? "FAKE / HIGH RISK" : redFlags.length>=1 ? "SUSPICIOUS" : "LIKELY REAL", score: company.score, isReal: true };
+            }
