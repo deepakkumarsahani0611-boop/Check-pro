@@ -1,12 +1,13 @@
-// src/lib/worldCheck.ts - V19 FINAL - 100% REAL - NO DUMMY - NO SELECTED DATA
-// RULE: If API gives no data -> null / Unknown. Never invent. Unknown != Fake. Fake only on proof. Low score != Fake.
+// src/lib/worldCheck.ts - V20 FINAL - 100% REAL - NO DUMMY - GLOBAL
+// RULE: No data = Unknown. Never invent. Unknown != Fake. Fake only on proof.
 
 const BRANDS: Record<string, string> = {
   google: "google.com", microsoft: "microsoft.com", amazon: "amazon.com",
-  paytm: "paytm.com", flipkart: "flipkart.com", swiggy: "swiggy.com", zomato: "zomato.com",
-  infosys: "infosys.com", hdfcbank: "hdfcbank.com", hdfc: "hdfcbank.com", zerodha: "zerodha.com",
-  vercel: "vercel.com", facebook: "facebook.com", instagram: "instagram.com", apple: "apple.com",
-  samsung: "samsung.com", tcs: "tcs.com", wipro: "wipro.com", reliance: "reliance.com",
+  openai: "openai.com", chatgpt: "openai.com", anthropic: "anthropic.com", claude: "anthropic.com",
+  groww: "groww.in", zerodha: "zerodha.com", paytm: "paytm.com", flipkart: "flipkart.com",
+  swiggy: "swiggy.com", zomato: "zomato.com", infosys: "infosys.com", hdfcbank: "hdfcbank.com",
+  hdfc: "hdfcbank.com", vercel: "vercel.com", facebook: "facebook.com", instagram: "instagram.com",
+  apple: "apple.com", samsung: "samsung.com", tcs: "tcs.com", wipro: "wipro.com", reliance: "reliance.com",
   icici: "icicibank.com", icicibank: "icicibank.com", sbi: "sbi.co.in", axisbank: "axisbank.com",
   kotak: "kotak.com", phonepe: "phonepe.com", ola: "olacabs.com", uber: "uber.com",
   netflix: "netflix.com", adobe: "adobe.com", oracle: "oracle.com", ibm: "ibm.com",
@@ -15,25 +16,36 @@ const BRANDS: Record<string, string> = {
   tata: "tata.com", mahindra: "mahindra.com", bajaj: "bajajfinserv.in", adani: "adani.com",
   jio: "jio.com", airtel: "airtel.in", vodafone: "vi.com", idea: "vi.com",
   hdfclife: "hdfclife.com", icicipru: "iciciprulife.com", lic: "licindia.in",
-  olaelectric: "olaelectric.com", oyo: "oyorooms.com", makeMyTrip: "makemytrip.com",
-  makemytrip: "makemytrip.com", cleartrip: "cleartrip.com", irctc: "irctc.co.in",
-  byjus: "byjus.com", unacademy: "unacademy.com", cred: "cred.club", groww: "groww.in",
-  upstox: "upstox.com", angelone: "angelone.in", payzapp: "payzapp.in", gpay: "pay.google.com",
-  amazonin: "amazon.in", myntra: "myntra.com", ajio: "ajio.com", meesho: "meesho.com",
-  snapdeal: "snapdeal.com", bigbasket: "bigbasket.com", blinkit: "blinkit.com", zepto: "zepto.com",
-  dunzo: "dunzo.com", rapido: "rapido.bike", delhivery: "delhivery.com", zomatofood: "zomato.com",
-  dominos: "dominos.co.in", pizza: "dominos.co.in", kfc: "kfc.co.in", mcdonalds: "mcdonaldsindia.com",
+  olaelectric: "olaelectric.com", oyo: "oyorooms.com", makemytrip: "makemytrip.com",
+  cleartrip: "cleartrip.com", irctc: "irctc.co.in", byjus: "byjus.com", unacademy: "unacademy.com",
+  cred: "cred.club", upstox: "upstox.com", angelone: "angelone.in", payzapp: "payzapp.in",
+  gpay: "pay.google.com", amazonin: "amazon.in", myntra: "myntra.com", ajio: "ajio.com",
+  meesho: "meesho.com", snapdeal: "snapdeal.com", bigbasket: "bigbasket.com", blinkit: "blinkit.com",
+  zepto: "zepto.com", dunzo: "dunzo.com", rapido: "rapido.bike", delhivery: "delhivery.com",
+  dominos: "dominos.co.in", kfc: "kfc.co.in", mcdonalds: "mcdonaldsindia.com",
   starbucks: "starbucks.in", nike: "nike.com", adidas: "adidas.co.in", puma: "puma.com",
   sony: "sony.com", lg: "lg.com", panasonic: "panasonic.com", nokia: "nokia.com",
   xiaomi: "mi.com", oneplus: "oneplus.in", vivo: "vivo.com", oppo: "oppo.com",
   realme: "realme.com", honda: "honda.com", toyota: "toyota.com", hyundai: "hyundai.com",
   maruti: "marutisuzuki.com", suzuki: "marutisuzuki.com", hero: "heromotocorp.com",
-  icicibank2: "icicibank.com", yesbank: "yesbank.in", punjab: "pnb.co.in", pnb: "pnb.co.in",
-  bankofbaroda: "bankofbaroda.in", canara: "canarabank.com", unionbank: "unionbankofindia.co.in",
-  idfc: "idfcfirstbank.com", federal: "federalbank.co.in", indusind: "indusind.com",
-  dbs: "dbs.com", hsbc: "hsbc.co.in", citi: "citibank.co.in", standard: "sc.com",
+  yesbank: "yesbank.in", pnb: "pnb.co.in", bankofbaroda: "bankofbaroda.in", canara: "canarabank.com",
+  unionbank: "unionbankofindia.co.in", idfc: "idfcfirstbank.com", federal: "federalbank.co.in",
+  indusind: "indusind.com", dbs: "dbs.com", hsbc: "hsbc.co.in", citi: "citibank.co.in", standard: "sc.com",
+  dollarking: "dollarking.com", meta: "meta.com",
 };
-// NOTE: BRANDS is ONLY for typo reference. NOT a whitelist. Domain NOT in list = Verified via live API, NOT Fake.
+
+const GLOBAL_SCAM_PATTERNS = [
+  'watch ads','ad watching','watch ad','recharge job','mobile recharge',
+  'captcha','copy paste','copy-paste','typing work','typing job','form filling',
+  'telegram task','telegram job','packing job','pen packing','home packing',
+  'whatsapp forward','whatsapp job','like job','youtube like',
+  'survey loot','earn money by watching','pay to join','registration fee'
+];
+
+export function detectScamPattern(job: string): string | null {
+  const j = (job || '').toLowerCase();
+  return GLOBAL_SCAM_PATTERNS.find(p => j.includes(p)) || null;
+}
 
 const DOUBLE_SUFFIX = new Set(["co.uk","co.in","com.au","com.br","co.jp","co.kr","com.mx","com.sg","org.uk","ac.in","gov.in","co.za","com.tr","com.pl","com.ar"]);
 export const getRootDomain = (input: string): string => {
@@ -113,57 +125,40 @@ export async function verifyCompanyReal(input: string) {
   if (!domain || !domain.includes(".")) throw new Error("Invalid domain");
   const cached = getCache(`c-${domain}`);
   if (cached) return cached;
-
   const typo = checkTypo(domain);
   if (typo) {
-    const out = { domain, company: domain.split(".")[0], ssl: false, issuer: "Unknown", created: null, ageDays: null, country: "Unknown", ip: "Unknown", registrar: "Unknown", score: 0, label: "DANGER", reasons: [typo.message, "Typo-squat domain - Never send money / OTP / Password", `Official site: ${typo.realBrand} - Open only that`], isReal: true, isTypo: true, realBrand: typo.realBrand, source: "Typo Engine" };
+    const out = { domain, company: domain.split(".")[0], ssl: false, issuer: "Unknown", created: null, ageDays: null, country: "Unknown", ip: "Unknown", registrar: "Unknown", score: 0, label: "FAKE", reasons: [typo.message], isReal: true, isTypo: true, realBrand: typo.realBrand, typo: typo.realBrand, source: "Typo Engine" };
     setCache(`c-${domain}`, out);
     return out;
   }
-
   try {
     const res = await fetchTimeout(`/api/check?domain=${encodeURIComponent(domain)}`, 9000).then(r => {
       if (!r.ok) throw new Error(`Backend ${r.status}`);
       return r.json();
     });
     if (res.typo) {
-      const out = { domain, company: domain.split(".")[0], ssl: false, issuer: "Unknown", created: null, ageDays: null, country: "Unknown", ip: "Unknown", registrar: "Unknown", score: 0, label: "DANGER", reasons: [`TYPO-SQUAT! Fake version of ${res.typo}`], isReal: true, isTypo: true, realBrand: res.typo, source: "Backend V12" };
+      const out = { domain, company: domain.split(".")[0], ssl: false, issuer: "Unknown", created: null, ageDays: null, country: "Unknown", ip: "Unknown", registrar: "Unknown", score: 0, label: "FAKE", reasons: [`TYPO-SQUAT! Fake version of ${res.typo}`], isReal: true, isTypo: true, realBrand: res.typo, typo: res.typo, source: "Backend" };
       setCache(`c-${domain}`, out);
       return out;
     }
-
     const ssl = res.ssl === true ? true : res.ssl === false ? false : null;
     const created = res.created || null;
     const ageDays = created ? Math.floor((Date.now() - new Date(created).getTime()) / 86400000) : null;
-
     let score = 0; const reasons: string[] = [];
-    if (ssl === true) { score += 40; reasons.push(`SSL Certificate Valid - ${res.sslIssuer || "Unknown"}`); }
+    if (ssl === true) { score += 50; reasons.push(`SSL Certificate Valid - Secure Connection`); }
     else if (ssl === false) { reasons.push("SSL Certificate Not Valid"); }
     else { reasons.push("SSL Unknown - Could not verify"); }
-
-    if (ageDays !== null && ageDays > 3650) { score += 40; reasons.push(`Domain is ${ageDays} days old`); }
-    else if (ageDays !== null && ageDays > 1000) { score += 30; reasons.push(`Domain is ${ageDays} days old`); }
-    else if (ageDays !== null && ageDays > 180) { score += 20; reasons.push(`Domain is ${ageDays} days old`); }
+    if (ageDays !== null && ageDays > 3650) { score += 50; reasons.push(`Domain is ${ageDays} days old`); }
+    else if (ageDays !== null && ageDays > 1000) { score += 40; reasons.push(`Domain is ${ageDays} days old`); }
+    else if (ageDays !== null && ageDays > 180) { score += 25; reasons.push(`Domain is ${ageDays} days old`); }
     else if (ageDays !== null && ageDays >= 0) { score += 5; reasons.push(`Domain is ${ageDays} days old`); }
     else { reasons.push("Domain age Unknown - Could not verify via RDAP"); }
-
-    if (res.country) { score += 20; reasons.push(`Server Country: ${res.country}`); }
-    else { reasons.push("Server Country: Unknown"); }
+    if (res.country) reasons.push(`Server Country: ${res.country}`);
     if (res.registrar) reasons.push(`Registrar: ${res.registrar}`);
-
     score = Math.max(0, Math.min(100, score));
-    const allUnknown = ssl === null && ageDays === null && !res.country;
-    // V19 FIX: Low score = UNKNOWN, NOT DANGER. DANGER only on typo proof.
-    const label = allUnknown ? "CAUTION" : score >= 70 ? "SAFE" : score >= 40 ? "CAUTION" : "UNKNOWN - Insufficient Data";
-
-    const out = {
-      domain, company: domain.split(".")[0],
-      ssl, issuer: res.sslIssuer || "Unknown",
-      created: created || "Unknown", ageDays,
-      country: res.country || "Unknown", ip: res.ip || "Unknown", registrar: res.registrar || "Unknown",
-      score, label, reasons,
-      isReal: true, source: "Backend V12 - Live Verified"
-    };
+    const allUnknown = ssl === null && ageDays === null;
+    const label = allUnknown ? "UNKNOWN" : score >= 70 ? "SAFE" : score >= 40 ? "CAUTION" : "UNKNOWN";
+    const out = { domain, company: domain.split(".")[0], ssl, issuer: res.sslIssuer || "Unknown", created: created || "Unknown", ageDays, country: res.country || "Unknown", ip: res.ip || "Unknown", registrar: res.registrar || "Unknown", score, label, reasons, typo: null, isReal: true, source: "Backend - Live Verified" };
     setCache(`c-${domain}`, out);
     return out;
   } catch {
@@ -190,20 +185,19 @@ export async function verifyCompanyReal(input: string) {
       }
     }
     let score = 0; const reasons: string[] = [];
-    if (ssl === true) { score+=40; reasons.push("SSL Certificate Found - Verified via crt.sh"); }
-    else if (ssl === false) { reasons.push("SSL Certificate Not Found - Fallback Check"); score+=10; }
+    if (ssl === true) { score+=50; reasons.push("SSL Certificate Found - Verified via crt.sh"); }
+    else if (ssl === false) { reasons.push("SSL Certificate Not Found - Fallback Check"); }
     else { reasons.push("SSL Unknown - Could not verify"); }
-    if (ageDays !== null && ageDays > 3650) { score+=40; reasons.push(`Domain is ${ageDays} days old`); }
-    else if (ageDays !== null && ageDays > 1000) { score+=30; reasons.push(`Domain is ${ageDays} days old`); }
-    else if (ageDays !== null && ageDays > 180) { score+=20; reasons.push(`Domain is ${ageDays} days old`); }
+    if (ageDays !== null && ageDays > 3650) { score+=50; reasons.push(`Domain is ${ageDays} days old`); }
+    else if (ageDays !== null && ageDays > 1000) { score+=40; reasons.push(`Domain is ${ageDays} days old`); }
+    else if (ageDays !== null && ageDays > 180) { score+=25; reasons.push(`Domain is ${ageDays} days old`); }
     else if (ageDays !== null && ageDays >= 0) { score+=5; reasons.push(`Domain is ${ageDays} days old`); }
     else { reasons.push("Domain age Unknown - Could not verify via RDAP"); }
-    if (country!=="Unknown") { score+=20; reasons.push(`Server Country: ${country}`); } else { reasons.push("Server Country: Unknown"); }
+    if (country!=="Unknown") reasons.push(`Server Country: ${country}`); else reasons.push("Server Country: Unknown");
     if (registrar!=="Unknown") reasons.push(`Registrar: ${registrar}`);
     score = Math.max(0, Math.min(100, score));
-    // V19 FIX: Low score = UNKNOWN, NOT DANGER.
-    const label = (ssl === null && ageDays === null && country === "Unknown") ? "CAUTION" : score>=70 ? "SAFE" : score>=40 ? "CAUTION" : "UNKNOWN - Insufficient Data";
-    const out = { domain, company: domain.split(".")[0], ssl, issuer, created: created || "Unknown", ageDays, country, ip: ip||"Unknown", registrar, score, label, reasons, isReal: true, source: "Fallback - crt.sh + RDAP + DNS + ip-api" };
+    const label = (ssl === null && ageDays === null) ? "UNKNOWN" : score>=70 ? "SAFE" : score>=40 ? "CAUTION" : "UNKNOWN";
+    const out = { domain, company: domain.split(".")[0], ssl, issuer, created: created || "Unknown", ageDays, country, ip: ip||"Unknown", registrar, score, label, reasons, typo: null, isReal: true, source: "Fallback - crt.sh + RDAP + DNS" };
     setCache(`c-${domain}`, out);
     return out;
   }
@@ -230,25 +224,45 @@ export async function checkLinkReal(link: string) {
   const domain = getRootDomain(cleanDomain(link));
   const company = await verifyCompanyReal(domain);
   const isFake = company.ssl === false && company.ageDays !== null && company.ageDays < 90;
-  return { ...company, link, isSafe: !isFake && !company.isTypo, verdict: company.isTypo ? "FAKE - TYPO-SQUAT" : company.score>=70 ? "SAFE - Real Company" : company.score>=40 ? "SUSPICIOUS" : "UNKNOWN - Insufficient Data", isReal: true };
+  return { ...company, link, isSafe: !isFake && !company.isTypo, verdict: company.isTypo ? "FAKE - TYPO-SQUAT" : company.score>=70 ? "SAFE - Real Company" : company.score>=40 ? "CAUTION" : "UNKNOWN - Insufficient Data", isReal: true };
 }
 
 export async function checkFakeJobReal(jobTitle: string, companyName: string) {
   const cleanName = companyName.trim().toLowerCase();
   const key = cleanName.replace(/[^a-z0-9]/g,"");
-  const knownDomain = BRANDS[key] || BRANDS[cleanName.split(" ")[0]];
-  const jobs = await searchJobsWorldwide(jobTitle);
-  const foundInRealAPI = jobs.some((j:any)=>j.company.toLowerCase().includes(cleanName.split(" ")[0]));
+  const firstWord = cleanName.split(" ")[0] || key;
+  let knownDomain = BRANDS[key] || BRANDS[firstWord] || BRANDS[cleanName];
   if (!knownDomain) {
-    return { jobTitle, company: companyName, companyCheck: null, foundInRealAPI, redFlags: ["Company domain Unknown - Cannot verify without official domain"], verdict: "UNKNOWN - Cannot Verify", score: null, isReal: true };
+    if (cleanName.includes(".")) knownDomain = getRootDomain(cleanName);
+    else knownDomain = `${key}.com`;
   }
-  const company = await verifyCompanyReal(knownDomain);
+  const jobs = await searchJobsWorldwide(jobTitle);
+  const foundInRealAPI = jobs.some((j:any)=>(j.company||"").toLowerCase().includes(firstWord));
+  const scamPattern = detectScamPattern(jobTitle);
+  let company: any;
+  try {
+    company = await verifyCompanyReal(knownDomain);
+  } catch {
+    company = { domain: knownDomain, company: companyName, ssl: null, issuer: "Unknown", created: "Unknown", ageDays: null, country: "Unknown", ip: "Unknown", registrar: "Unknown", score: null, label: "UNKNOWN", reasons: ["Live data not available for this domain"], typo: null, isReal: true, source: "Unknown" };
+  }
   const redFlags: string[] = [];
+  if (scamPattern) {
+    redFlags.push(`FAKE LOOP DETECTED - Job title "${scamPattern}" is a global scam pattern. Real companies do not offer this job.`);
+    redFlags.push('Domain age does not make this job real.');
+  }
   if (company.isTypo) redFlags.push(`TYPO-SQUAT! Official: ${company.realBrand}`);
   if (company.ssl === false) redFlags.push("Company SSL is not valid");
   if (company.ssl === null) redFlags.push("Company SSL Unknown - Could not verify");
-  if (company.ageDays !== null && company.ageDays < 180) redFlags.push(`Domain is ${company.ageDays} days old`);
-  if (jobTitle.toLowerCase().includes("telegram") || jobTitle.toLowerCase().includes("whatsapp only")) redFlags.push("Telegram/WhatsApp only contact - High Risk Flag - No official website / email found");
-  const isFake = Boolean(company.isTypo) || (company.ssl === false && company.ageDays !== null && company.ageDays < 90);
-  return { jobTitle, company: companyName, companyCheck: company, foundInRealAPI, redFlags, verdict: isFake ? "FAKE / HIGH RISK" : redFlags.length>=1 ? "SUSPICIOUS" : "LIKELY REAL", score: company.score, isReal: true };
-            }
+  if (company.ageDays !== null && company.ageDays < 180) redFlags.push(`Domain is ${company.ageDays} days old - New domain, be careful`);
+  if (jobTitle.toLowerCase().includes("telegram") || jobTitle.toLowerCase().includes("whatsapp only")) redFlags.push("Telegram/WhatsApp only contact - High Risk - No official website / email found");
+  const isFake = !!scamPattern || Boolean(company.isTypo);
+  let finalScore: number | null = company.score;
+  if (scamPattern) finalScore = typeof company.score === 'number' ? Math.min(company.score, 10) : 10;
+  return {
+    jobTitle, company: companyName,
+    companyCheck: { ...company, label: isFake ? 'FAKE' : company.label, typo: company.typo || null },
+    foundInRealAPI, redFlags,
+    verdict: isFake ? "FAKE / HIGH RISK" : company.label === 'SAFE' ? "SAFE - Real Company" : company.label === 'CAUTION' ? "CAUTION" : "UNKNOWN - Insufficient Data",
+    score: finalScore, isReal: true
+  };
+  }
